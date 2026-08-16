@@ -1,4 +1,4 @@
 import './globals.css';
 import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Synapse — Contextual Active Recall Canvas', description: 'Active recall canvas' };
-export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="en"><body>{children}</body></html>; }
+export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="en"><head><script dangerouslySetInnerHTML={{__html:`(function(){try{var ui=JSON.parse(localStorage.getItem("synapse:v1:ui-settings")||"{}");var id=(typeof ui.theme==="string"&&ui.theme)?ui.theme:"light";var attr="light";if(id==="dark"){attr="dark";}else if(id!=="light"){var cs=JSON.parse(localStorage.getItem("synapse:v1:custom-themes")||"{}");var t=cs[id];if(t&&t.colors){attr=(t.base==="dark")?"dark":"light";for(var k in t.colors){if(Object.prototype.hasOwnProperty.call(t.colors,k)){document.documentElement.style.setProperty(k,t.colors[k]);}}}}document.documentElement.setAttribute("data-theme",attr);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`}} /></head><body>{children}</body></html>; }

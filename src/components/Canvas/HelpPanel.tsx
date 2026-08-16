@@ -64,6 +64,7 @@ export default function HelpPanel() {
       <ul>
        <li>Drag the empty canvas to pan. Scroll to zoom.</li>
        <li>View bar: <code>−</code> zoom out · <code>%</code> reset · <code>+</code> zoom in · frame icon fits everything on screen.</li>
+       <li>The sun / moon button switches light and dark theme. Your choice is remembered.</li>
        <li>&quot;New topic&quot; creates a root node at the center of your view.</li>
       </ul>
      </section>
@@ -77,6 +78,13 @@ export default function HelpPanel() {
        <li>Tag what you missed.</li>
        <li>Next session, hunt the reds and ambers first.</li>
       </ol>
+     </section>
+     <section className="help-section">
+      <h3>Themes</h3>
+      <ul>
+       <li>The palette button opens Themes. Apply light or dark, or create your own.</li>
+       <li>Custom themes are JSON files of color variables. Export a theme to share it, or import one to add it.</li>
+      </ul>
      </section>
      <section className="help-section">
       <h3>Your data</h3>

@@ -6,3 +6,8 @@ export const STATUS_ORDER:Status[]=['none','failed','review','mastered'];
 export const STATUS_META:Record<Status,{label:string;color:string;short:string}>={none:{label:'Untagged',color:'#94a3b8',short:''},failed:{label:'Failed',color:'#ef4444',short:'F'},review:{label:'Needs review',color:'#f59e0b',short:'R'},mastered:{label:'Mastered',color:'#10b981',short:'M'}};
 export const NODE_WIDTH=280, NODE_MIN_HEIGHT=60, HORIZONTAL_INDENT=320, VERTICAL_GAP=30, MIN_ZOOM=.25, MAX_ZOOM=2.5;
 export type HeatmapMode = 'full' | 'mini' | 'hidden';
+export type ThemeId = string;
+export type Theme = ThemeId;
+export interface CustomTheme { id:string; name:string; base:'light'|'dark'; colors:Record<string,string>; createdAt:number; updatedAt:number; }
+export const THEME_TOKENS:readonly string[]=['--bg','--dot-grid','--surface','--panel-bg','--overlay','--hover','--chip-bg','--ink','--ink-2','--muted','--faint','--line','--line-2','--accent','--accent-hover','--accent-soft','--edge-line','--danger','--danger-soft','--success','--success-soft'];
+export const BUILT_IN_THEME_IDS=['light','dark'] as const;
