@@ -1,0 +1,92 @@
+'use client';
+
+import {useEffect,useRef,useState} from 'react';
+
+export default function HelpPanel() {
+ const [open,setOpen]=useState<boolean>(false);
+ const triggerRef=useRef<HTMLButtonElement>(null), closeRef=useRef<HTMLButtonElement>(null);
+
+ useEffect(()=>{
+  if(!open)return;
+  closeRef.current?.focus();
+  const handleKeyDown=(event:KeyboardEvent)=>{
+   if(event.key==='Escape')setOpen(false);
+  };
+  window.addEventListener('keydown',handleKeyDown);
+  return()=>{
+   window.removeEventListener('keydown',handleKeyDown);
+   triggerRef.current?.focus();
+  };
+ },[open]);
+
+ return <>
+  <button ref={triggerRef} type="button" className="help-trigger" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setOpen(true)}} onPointerDown={event=>event.stopPropagation()}>?</button>
+  {open&&<div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setOpen(false)}} onPointerDown={event=>event.stopPropagation()}>
+   <div className="help-modal" onClick={event=>event.stopPropagation()} onPointerDown={event=>event.stopPropagation()}>
+    <div className="help-header">
+     <h2 id="help-title">How to use Synapse</h2>
+     <button ref={closeRef} type="button" className="help-close" aria-label="Close help" onClick={event=>{event.stopPropagation();setOpen(false)}} onPointerDown={event=>event.stopPropagation()}>×</button>
+    </div>
+    <div className="help-content">
+     <section className="help-section">
+      <h3>Edit nodes</h3>
+      <ul>
+       <li>Click a node&apos;s text to edit it.</li>
+       <li><code>Enter</code> saves · <code>Shift + Enter</code> adds a new line · <code>Esc</code> cancels · clicking away saves.</li>
+       <li><code>+</code> on a node adds a child. The trash icon deletes (branches ask for confirmation).</li>
+       <li>Drag the <code>⣿</code> handle to reposition a node. This never changes the hierarchy.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Organize branches</h3>
+      <ul>
+       <li>Click the chevron <code>›</code> to collapse or expand one branch only.</li>
+       <li>Use Collapse All / Expand All in the toolbar.</li>
+       <li>Collapsed branches show summary chips for their hidden children.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Tag your recall</h3>
+      <ul>
+       <li>Click the status dot to cycle: none → Failed (red) → Review (amber) → Mastered (green).</li>
+       <li>Red = couldn&apos;t recall · Amber = partially remembered · Green = solid.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Read the heatmap</h3>
+      <ul>
+       <li>The heatmap panel shows your page-wide stats. Minimize it to a slim bar or hide it with its – and × buttons.</li>
+       <li>Collapsed parents show chips counting failed / review / mastered direct children.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Move around</h3>
+      <ul>
+       <li>Drag the empty canvas to pan. Scroll to zoom.</li>
+       <li>View bar: <code>−</code> zoom out · <code>%</code> reset · <code>+</code> zoom in · frame icon fits everything on screen.</li>
+       <li>&quot;New topic&quot; creates a root node at the center of your view.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>The recall workflow</h3>
+      <ol>
+       <li>Build your topic tree.</li>
+       <li>Collapse everything.</li>
+       <li>Recite from memory.</li>
+       <li>Expand to verify.</li>
+       <li>Tag what you missed.</li>
+       <li>Next session, hunt the reds and ambers first.</li>
+      </ol>
+     </section>
+     <section className="help-section">
+      <h3>Your data</h3>
+      <ul>
+       <li>Everything auto-saves to this browser. Local-first: no account, no cloud.</li>
+       <li>Clearing browser data erases your canvases. Export regularly once export is available.</li>
+      </ul>
+     </section>
+    </div>
+   </div>
+  </div>}
+ </>;
+}

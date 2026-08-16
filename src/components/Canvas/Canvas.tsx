@@ -6,6 +6,7 @@ import {MAX_ZOOM,MIN_ZOOM,NODE_MIN_HEIGHT,NODE_WIDTH,STATUS_META,type Status} fr
 import Node from './Node';
 import Toolbar from './Toolbar';
 import HeatmapPanel from './HeatmapPanel';
+import HelpPanel from './HelpPanel';
 
 export default function Canvas({canvasId}:{canvasId:string}) {
  const canvas=useCanvasStore(s=>s.canvas), init=useCanvasStore(s=>s.init), update=useCanvasStore(s=>s.update), createRoot=useCanvasStore(s=>s.createRoot), saved=useCanvasStore(s=>s.saved);
@@ -19,5 +20,6 @@ export default function Canvas({canvasId}:{canvasId:string}) {
  <Toolbar onAdd={()=>createRoot({x:ref.current!.clientWidth,y:ref.current!.clientHeight})} onCollapse={()=>update(c=>Object.values(c.nodes).forEach(n=>{if(children(c,n.id).length)n.isCollapsed=true}))} onExpand={()=>update(c=>Object.values(c.nodes).forEach(n=>n.isCollapsed=false))}/>
  <div id="viewbar" className="ui-float"><button className="zb-btn" onClick={()=>changeZoom(canvas.viewport.zoom/1.2)}>−</button><button className="zb-btn" id="zoom-label" onClick={()=>changeZoom(1)}>{Math.round(canvas.viewport.zoom*100)}%</button><button className="zb-btn" onClick={()=>changeZoom(canvas.viewport.zoom*1.2)}>＋</button><div className="zb-sep"/><button className="zb-btn" onClick={fit}>⊡</button><div className="zb-sep"/><div id="save-ind" className={saved?'show':''}><span className="dot"/>Saved</div></div>
  <HeatmapPanel />
- <div id="hint" className="ui-float"><span><b>Click text</b> to edit</span><span><b>Drag ⣿</b> to move</span><span><b>Click ●</b> to tag</span><span><b>Scroll</b> to zoom</span><span><b>Drag canvas</b> to pan</span></div></>;
+ <HelpPanel />
+</>;
 }
