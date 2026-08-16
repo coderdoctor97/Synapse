@@ -1,0 +1,1 @@
+'use client'; import type {ButtonHTMLAttributes} from 'react'; export default function Button({className='',...p}:ButtonHTMLAttributes<HTMLButtonElement>){return <button className={`btn ${className}`} {...p}/>}
