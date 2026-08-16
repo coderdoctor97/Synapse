@@ -1,0 +1,73 @@
+{
+  "guardian": "SYNAPSE_SESSION_CONSTITUTION",
+  "version": "1.0.0",
+  "activated": "2026-08-16T12:55:00+05:30",
+  "sources": ["ARCHITECTURE_v1.md", "PROJECT_RULES.md", "V2-04-audit-latest-version.md"],
+  "status": "ACTIVE",
+  "scope": "session",
+  "locked": {
+    "stack": {
+      "framework": "Next.js 13+ App Router (locked)",
+      "language": "TypeScript strict (locked)",
+      "state": "Zustand 4.5.5 (locked)",
+      "persistence": "localStorage V1 (locked)",
+      "backend": "NONE (locked)",
+      "storage": "Flat Record<string, Node> (locked)"
+    },
+    "dataModel": {
+      "Node": ["id", "content", "parentId", "position", "status", "isCollapsed", "createdAt", "updatedAt"],
+      "CanvasData": ["id", "name", "nodes", "viewport", "createdAt", "updatedAt"],
+      "Status": ["none", "failed", "review", "mastered"],
+      "content": "plain text only (V1)",
+      "viewportKeys": ["x", "y", "zoom"]
+    },
+    "persistenceKeys": {
+      "canvas": "synapse:v1:canvas:<id>",
+      "uiSettings": "synapse:v1:ui-settings",
+      "customThemes": "synapse:v1:custom-themes"
+    },
+    "domainRules": [
+      "parentId null = root",
+      "visibleOrder hides subtree when ancestor isCollapsed",
+      "delete cascades to all descendants",
+      "status cycle none→failed→review→mastered→none",
+      "statusSummary aggregates direct children only",
+      "world space: children x = parent.x+320, siblings stacked y+60+30",
+      "seed + debounced 400ms save",
+      "editingId/justCreatedId in store"
+    ],
+    "bannedDependencies": [
+      "express", "fastify", "koa", "@prisma/client", "prisma", "mongoose", "mongodb", "pg", "mysql2", "drizzle-orm", "supabase", "firebase", "@supabase/supabase-js", "next-auth", "lucia", "redux", "@reduxjs/toolkit", "jotai", "valtio", "mobx", "recoil"
+    ]
+  },
+  "workflow": {
+    "beforeWork": ["git pull/rebase", "npm install", "npm run build (clean baseline)"],
+    "branchNaming": ["feat/*", "fix/*", "refactor/*", "chore/*"],
+    "beforePR": ["npm run build", "node scripts/guardian.mjs", "manual verify create/edit/status/collapse/drag/zoom/delete", "tests for pure logic"],
+    "commitPrefix": ["feat:", "fix:", "refactor:", "test:", "docs:", "chore:"],
+    "versioning": "SemVer MAJOR breaking storage/routing, MINOR feature, PATCH fix"
+  },
+  "changeMap": {
+    "route/page": "src/app/",
+    "visual styles": "src/app/globals.css",
+    "canvas interaction": "src/components/Canvas/ + src/hooks/",
+    "business rule": "src/lib/operations/",
+    "data shape": "src/lib/types.ts + persistence migration",
+    "storage": "src/lib/persistence.ts",
+    "reusable control": "src/components/ui/",
+    "tests": "tests/"
+  },
+  "migrationRule": "Any Node/CanvasData shape change requires schemaVersion bump + migration in loadCanvas() — never discard user data (ARCHITECTURE §10)",
+  "pendingNotApproved": [
+    "V2-04b isHidden: boolean (designed, not implemented — needs override to build)",
+    "useViewport.ts extraction",
+    "CanvasEdges.tsx",
+    "storage adapter interface",
+    "modal replacing confirm()",
+    "canvas index page",
+    "export/import JSON"
+  ],
+  "conflictPolicy": "If user request conflicts with LOCKED, STOP and ask for OVERRIDE:<reason> — do not improvise",
+  "validator": "node scripts/guardian.mjs",
+  "requiredChecks": ["guardian.mjs passes", "npm run build passes"]
+}

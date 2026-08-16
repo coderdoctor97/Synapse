@@ -35,6 +35,7 @@ export default function HelpPanel() {
        <li><code>Enter</code> saves · <code>Shift + Enter</code> adds a new line · <code>Esc</code> cancels · clicking away saves.</li>
        <li><code>+</code> on a node adds a child. The trash icon deletes (branches ask for confirmation).</li>
        <li>Drag the <code>⣿</code> handle to reposition a node. This never changes the hierarchy.</li>
+       <li>Click a node to select it. Click the empty canvas to deselect.</li>
       </ul>
      </section>
      <section className="help-section">
@@ -50,6 +51,27 @@ export default function HelpPanel() {
       <ul>
        <li>Click the status dot to cycle: none → Failed (red) → Review (amber) → Mastered (green).</li>
        <li>Red = couldn&apos;t recall · Amber = partially remembered · Green = solid.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Shortcuts</h3>
+      <ul>
+       <li>Select a node, then press 1, 2, or 3 to tag it Failed, Review, or Mastered. Press 0 to clear the tag.</li>
+       <li>Press Esc to deselect.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Undo &amp; Redo</h3>
+      <ul>
+       <li>Ctrl+Z (Cmd+Z on Mac) undoes a change. Ctrl+Y or Ctrl+Shift+Z redoes it.</li>
+       <li>Undo applies to your nodes, not to zooming, panning, or page changes.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Node colors</h3>
+      <ul>
+       <li>The palette button on a node adds a decorative color to its card and its connecting line.</li>
+       <li>Node colors are for organization only. Red / amber / green still mean Failed / Review / Mastered.</li>
       </ul>
      </section>
      <section className="help-section">
@@ -84,6 +106,27 @@ export default function HelpPanel() {
       <ul>
        <li>The palette button opens Themes. Apply light or dark, or create your own.</li>
        <li>Custom themes are JSON files of color variables. Export a theme to share it, or import one to add it.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Import &amp; Export</h3>
+      <ul>
+       <li>Export downloads your canvas as a .synapse.json file you can keep or share.</li>
+       <li>Import loads a .synapse.json file. It replaces the current canvas, so a backup is downloaded first.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Library</h3>
+      <ul>
+       <li>The sidebar lists your folders and pages. Click a page to open it.</li>
+       <li>Use New folder and New page to organize your canvas into pages.</li>
+      </ul>
+     </section>
+     <section className="help-section">
+      <h3>Pages &amp; Folders</h3>
+      <ul>
+       <li>Rename or delete pages and folders from the sidebar.</li>
+       <li>Deleting a page downloads a backup first. Deleting a folder moves its pages up; it never deletes them.</li>
       </ul>
      </section>
      <section className="help-section">
