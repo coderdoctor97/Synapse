@@ -310,3 +310,22 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .btn-ghost:hover{ background: #f8fafc; }
 .btn-danger{ background: var(--red); color: #fff; }
 .btn-danger:hover{ background: #dc2626; }
+
+/* ---- V2-01: Heatmap panel controls ---- */
+.heatmap-header{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.heatmap-header h4{ margin-bottom: 8px; }
+.heatmap-header-actions{ display: flex; gap: 2px; flex: 0 0 auto; margin-top: -2px; }
+.heatmap-icon-btn{ width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: 6px; color: var(--faint); font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
+.heatmap-icon-btn:hover{ background: #f1f5f9; color: var(--ink-2); }
+
+/* ---- V2-01: Heatmap mini bar ---- */
+.heatmap-mini{ left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 12px; padding: 7px 8px 7px 14px; border-radius: 999px; cursor: pointer; user-select: none; animation: heatmap-fade-in .18s ease; }
+.heatmap-mini:hover{ border-color: var(--line-2); }
+.heatmap-mini-pair{ display: inline-flex; align-items: center; gap: 5px; }
+.heatmap-mini-dot{ width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.heatmap-mini-count{ font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2); line-height: 1; }
+@keyframes heatmap-fade-in{ from{ opacity: 0; transform: translateY(4px); } to{ opacity: 1; transform: translateY(0); } }
+
+/* ---- V2-01: Heatmap restore button (hidden state) ---- */
+.heatmap-restore{ left: 16px; bottom: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; color: var(--muted); padding: 0; animation: heatmap-fade-in .18s ease; }
+.heatmap-restore:hover{ color: var(--ink-2); border-color: var(--line-2); }
