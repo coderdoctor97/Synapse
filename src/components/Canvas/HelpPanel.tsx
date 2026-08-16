@@ -20,7 +20,10 @@ export default function HelpPanel() {
  },[open]);
 
  return <>
-  <button ref={triggerRef} type="button" className="help-trigger" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setOpen(true)}} onPointerDown={event=>event.stopPropagation()}>?</button>
+  <button ref={triggerRef} type="button" className="faq-button" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setOpen(true)}} onPointerDown={event=>event.stopPropagation()}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="800" font-family="Sora, Inter, system-ui, sans-serif" fill="white">?</text></svg>
+    <span className="tooltip">Help</span>
+  </button>
   {open&&<div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setOpen(false)}} onPointerDown={event=>event.stopPropagation()}>
    <div className="help-modal" onClick={event=>event.stopPropagation()} onPointerDown={event=>event.stopPropagation()}>
     <div className="help-header">

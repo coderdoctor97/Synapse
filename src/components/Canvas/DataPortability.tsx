@@ -2,6 +2,8 @@
 import { useRef, useState } from 'react';
 import { useCanvasStore } from '@/lib/store';
 import { parseImportedCanvas, serializeCanvas } from '@/lib/portability';
+import DownloadIcon from '@mui/icons-material/Download';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 
 function sanitize(name: string): string {
   const s = name.trim().replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
@@ -108,11 +110,7 @@ export default function DataPortability() {
           title="Export canvas"
           aria-label="Export canvas"
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 16V3" />
-            <path d="M7 10l5 6 5-6" />
-            <path d="M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
-          </svg>
+          <FileUploadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
           Export
         </button>
         <button
@@ -121,11 +119,7 @@ export default function DataPortability() {
           title="Import canvas"
           aria-label="Import canvas"
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 3v13" />
-            <path d="M7 11l5-6 5 6" />
-            <path d="M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
-          </svg>
+          <DownloadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
           Import
         </button>
         <input
@@ -157,11 +151,7 @@ export default function DataPortability() {
         >
           <div className="modal-card portability-modal-card" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
             <div className="modal-icon" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 16V3" />
-                <path d="M7 10l5 6 5-6" />
-                <path d="M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
-              </svg>
+              <DownloadIcon aria-hidden="true" />
             </div>
             <h3 id="portability-confirm-title">Import canvas?</h3>
             <p>

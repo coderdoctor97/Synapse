@@ -13,7 +13,9 @@ export default function Node({node,onDrag}:{node:NodeType;onDrag:(e:PointerEvent
  const update=useCanvasStore(s=>s.update), setEditing=useCanvasStore(s=>s.setEditing), createChild=useCanvasStore(s=>s.createChild), remove=useCanvasStore(s=>s.remove), setNodeTint=useCanvasStore(s=>s.setNodeTint);
  const [draft,setDraft]=useState(node.content); const input=useRef<HTMLTextAreaElement>(null); const kids=children(canvas,node.id); const summary=statusSummary(kids);
  const [paletteOpen,setPaletteOpen]=useState(false);
- useEffect(()=>{if(editing===node.id) input.current?.focus()},[editing,node.id]);
+ const adjustHeight=()=>{const el=input.current;if(!el) return;el.style.height='auto';const h=Math.min(el.scrollHeight,240);el.style.height=h+'px';el.style.overflowY=el.scrollHeight>240?'auto':'hidden';};
+ useEffect(()=>{if(editing===node.id){input.current?.focus();adjustHeight();}},[editing,node.id]);
+ useEffect(()=>{if(editing===node.id) adjustHeight();},[draft,editing,node.id]);
  useEffect(()=>{
    if(!paletteOpen) return;
    const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape') setPaletteOpen(false); };
@@ -22,7 +24,7 @@ export default function Node({node,onDrag}:{node:NodeType;onDrag:(e:PointerEvent
  },[paletteOpen]);
  const save=()=>{setEditing(null);update(c=>{c.nodes[node.id].content=draft;c.nodes[node.id].updatedAt=Date.now()})};
  const cycle=()=>update(c=>{const n=c.nodes[node.id];n.status=STATUS_ORDER[(STATUS_ORDER.indexOf(n.status)+1)%STATUS_ORDER.length]});
- const editor=editing===node.id ? <textarea ref={input} className="node-editor" placeholder="Type something…" spellCheck={false} value={draft} onChange={e=>setDraft(e.target.value)} onBlur={save} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();save()} else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setEditing(null)}}}/> : <div className={`node-content ${node.content?'':'is-empty'}`} onClick={()=>setEditing(node.id)}>{node.content||'Type something…'}</div>;
+ const editor=editing===node.id ? <textarea ref={input} className="node-editor" placeholder="Type something…" spellCheck={false} value={draft} onChange={e=>{setDraft(e.target.value);}} onBlur={save} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();save()} else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setEditing(null)}}} onInput={adjustHeight} /> : <div className={`node-content ${node.content?'':'is-empty'}`} onClick={()=>setEditing(node.id)}>{node.content||'Type something…'}</div>;
  const isSelected=selectedNodeIds.includes(node.id);
  return <div className={`node-card status-${node.status} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''}`} style={{left:node.position.x,top:node.position.y, ...(node.tint ? {['--tint' as string]: node.tint} as React.CSSProperties : {})} as React.CSSProperties} onPointerDownCapture={e=>{if(e.button===0) selectNode(node.id)}}>
   <div className="node-top"><div className="node-main"><StatusBadge status={node.status} onClick={cycle}/>{kids.length>0&&<button className={`chevron ${node.isCollapsed?'':'open'}`} onClick={()=>update(c=>{c.nodes[node.id].isCollapsed=!c.nodes[node.id].isCollapsed})}>›</button>}{editor}</div>

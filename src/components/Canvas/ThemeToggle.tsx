@@ -1,13 +1,91 @@
 'use client';
+import React from 'react';
+import styled from 'styled-components';
+import { useCanvasStore } from '@/lib/store';
 
-import {useEffect} from 'react';
-import {loadUISettings} from '@/lib/persistence';
-import {useCanvasStore} from '@/lib/store';
+const StyledWrapper = styled.div`
+  .toggle-switch {
+    position: relative;
+    width: 56px;
+    height: 28px;
+    --light: #d8dbe0;
+    --dark: #28292c;
+    --link: rgb(27, 129, 112);
+    --link-hover: rgb(24, 94, 82);
+  }
 
-export default function ThemeToggle(){
- const theme=useCanvasStore(s=>s.theme),setTheme=useCanvasStore(s=>s.setTheme);
- useEffect(()=>{const savedTheme=loadUISettings().theme;if(savedTheme!==theme)setTheme(savedTheme)},[setTheme,theme]);
- const isDark=theme==='dark',nextTheme=isDark?'light':'dark',label=isDark?'Switch to light theme':'Switch to dark theme';
- const stop=(e:React.PointerEvent|React.MouseEvent)=>e.stopPropagation();
- return <button className="zb-btn theme-toggle" type="button" aria-label={label} title={label} onPointerDown={stop} onClick={e=>{stop(e);setTheme(nextTheme)}}>{isDark?<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>:<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.1A8.5 8.5 0 1 1 9.9 3.5 6.6 6.6 0 0 0 20.5 14.1Z"/></svg>}</button>;
+  .switch-label {
+    position: absolute;
+    width: 100%;
+    height: 28px;
+    background-color: var(--dark);
+    border-radius: 14px;
+    cursor: pointer;
+    border: 2px solid var(--dark);
+  }
+
+  .checkbox {
+    position: absolute;
+    display: none;
+  }
+
+  .slider {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    -webkit-transition: 0.3s;
+    transition: 0.3s;
+  }
+
+  .checkbox:checked ~ .slider {
+    background-color: var(--light);
+  }
+
+  .slider::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    -webkit-box-shadow: inset 7px -2px 0px 0px var(--light);
+    box-shadow: inset 7px -2px 0px 0px var(--light);
+    background-color: var(--dark);
+    -webkit-transition: 0.3s;
+    transition: 0.3s;
+  }
+
+  .checkbox:checked ~ .slider::before {
+    -webkit-transform: translateX(28px);
+    -ms-transform: translateX(28px);
+    transform: translateX(28px);
+    background-color: var(--dark);
+    -webkit-box-shadow: none;
+    box-shadow: none;
+  }`;
+
+export function ThemeToggle() {
+  const theme = useCanvasStore((s) => s.theme);
+  const setTheme = useCanvasStore((s) => s.setTheme);
+  const isLight = theme === 'light';
+  const label = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+  return (
+    <StyledWrapper onPointerDown={(e) => e.stopPropagation()}>
+      <div className="toggle-switch">
+        <label className="switch-label" title={label} aria-label={label}>
+          <input
+            type="checkbox"
+            className="checkbox"
+            checked={isLight}
+            onChange={(e) => setTheme(e.target.checked ? 'light' : 'dark')}
+            aria-label={label}
+          />
+          <span className="slider" />
+        </label>
+      </div>
+    </StyledWrapper>
+  );
 }
+export default ThemeToggle;

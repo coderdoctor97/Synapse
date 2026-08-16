@@ -1,6 +1,28 @@
 {
-  "name": "synapse", "version": "1.0.0", "private": true,
-  "scripts": {"dev":"next dev", "build":"next build", "start":"next start", "test":"vitest run"},
-  "dependencies": {"next":"14.2.22", "react":"18.3.1", "react-dom":"18.3.1", "zustand":"4.5.5"},
-  "devDependencies": {"@types/node":"22.10.1", "@types/react":"18.3.12", "@types/react-dom":"18.3.1", "typescript":"5.7.2", "vitest":"2.1.8"}
+  "name": "synapse",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.3.1",
+    "next": "14.2.22",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "styled-components": "^6.5.3",
+    "zustand": "4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.1",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
 }

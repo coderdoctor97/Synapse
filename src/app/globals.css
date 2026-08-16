@@ -127,6 +127,7 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
   position: absolute;
   width: 280px;                 /* NODE_WIDTH */
   min-height: 60px;             /* NODE_MIN_HEIGHT */
+  height: auto;
   background-color: var(--surface);
   border: 1px solid var(--line);
   border-left: 3px solid transparent;
@@ -136,6 +137,7 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
   display: flex; flex-direction: column; gap: 7px;
   transition: box-shadow .16s ease, border-color .16s ease;
 }
+.node-card textarea{ resize: none; }
 .node-card:hover{ box-shadow: var(--shadow-md); }
 .node-card.status-failed  { border-left-color: var(--red); }
 .node-card.status-review  { border-left-color: var(--amber); }
@@ -189,9 +191,11 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 
 .node-editor{
   flex: 1; min-width: 0;
+  width: 100%;
   font-family: inherit; font-size: 13.5px; line-height: 1.45; font-weight: 500;
   color: var(--ink);
   background: transparent; border: none; outline: none; resize: none;
+  overflow: hidden;
   white-space: pre-wrap; word-break: break-word;
   padding: 1px 3px; margin: 0 -3px;
   min-height: 22px; max-height: 200px;
@@ -583,3 +587,148 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .btn:disabled, .btn.is-disabled{ opacity: .45; cursor: not-allowed; pointer-events: none; }
 .btn:disabled:hover, .btn.is-disabled:hover{ background: transparent; }
 .btn-primary:disabled, .btn-primary.is-disabled{ opacity: .45; }
+
+/* Theme Switch (scoped) — scaled to match viewbar zb-btn (30px) */
+.theme-switch {
+  font-size: 11px;
+  position: relative;
+  display: inline-block;
+  width: 4em;
+  height: 2.2em;
+  border-radius: 30px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+  flex: 0 0 auto;
+  vertical-align: middle;
+  align-self: center;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.theme-switch .slider {
+  position: absolute; cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #2a2a2a;
+  transition: 0.4s;
+  border-radius: 30px;
+  overflow: hidden;
+}
+.theme-switch .slider:before {
+  position: absolute; content: "";
+  height: 1.2em; width: 1.2em;
+  border-radius: 20px;
+  left: 0.5em; bottom: 0.5em;
+  transition: 0.4s;
+  transition-timing-function: cubic-bezier(0.81, -0.04, 0.38, 1.5);
+  box-shadow: inset 8px -4px 0px 0px #fff;
+}
+.theme-switch input:checked + .slider { background-color: #00a6ff; }
+.theme-switch input:checked + .slider:before {
+  transform: translateX(1.8em);
+  box-shadow: inset 15px -4px 0px 15px #ffcf48;
+}
+.theme-switch .star {
+  background-color: #fff; border-radius: 50%;
+  position: absolute; width: 5px; height: 5px;
+  transition: all 0.4s;
+}
+.theme-switch .star_1 { left: 2.5em; top: 0.5em; }
+.theme-switch .star_2 { left: 2.2em; top: 1.2em; }
+.theme-switch .star_3 { left: 3em; top: 0.9em; }
+.theme-switch input:checked ~ .slider .star { opacity: 0; }
+.theme-switch .cloud {
+  width: 3.5em; position: absolute;
+  bottom: -1.4em; left: -1.1em;
+  opacity: 0; transition: all 0.4s;
+}
+.theme-switch input:checked ~ .slider .cloud { opacity: 1; }
+.theme-switch input:focus-visible + .slider {
+  outline: 2px solid var(--accent, #00a6ff);
+  outline-offset: 2px;
+}
+
+.faq-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background-color: #1900ff;
+  background-image: linear-gradient(147deg, #903bff 0%, #9c00d0 74%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.151);
+  position: relative;
+}
+.faq-button svg {
+  height: 1.5em;
+  fill: white;
+}
+.faq-button:hover svg {
+  animation: jello-vertical 0.7s both;
+}
+@keyframes jello-vertical {
+  0% {
+    transform: scale3d(1, 1, 1);
+  }
+  30% {
+    transform: scale3d(0.75, 1.25, 1);
+  }
+  40% {
+    transform: scale3d(1.25, 0.75, 1);
+  }
+  50% {
+    transform: scale3d(0.85, 1.15, 1);
+  }
+  65% {
+    transform: scale3d(1.05, 0.95, 1);
+  }
+  75% {
+    transform: scale3d(0.95, 1.05, 1);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.tooltip {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  background-color: #ffe53b;
+  background-image: linear-gradient(147deg, #bf00ff 0%, #1e00ff 74%);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition-duration: 0.2s;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+.tooltip::before {
+  position: absolute;
+  content: "";
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  background-size: 1000%;
+  background-position: center;
+  transform: rotate(45deg);
+  bottom: -15%;
+  transition-duration: 0.3s;
+}
+
+.faq-button:hover .tooltip {
+  top: -40px;
+  opacity: 1;
+  transition-duration: 0.3s;
+}
+
+/* Keep FAQ button fixed at bottom-right like previous help-trigger */
+.faq-button {
+  position: fixed !important;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+}
