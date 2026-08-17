@@ -41,11 +41,10 @@
     ]
   },
   "workflow": {
-    "beforeWork": ["git pull/rebase", "npm install", "npm run build (clean baseline)"],
-    "branchNaming": ["feat/*", "fix/*", "refactor/*", "chore/*"],
-    "beforePR": ["npm run build", "node scripts/guardian.mjs", "manual verify create/edit/status/collapse/drag/zoom/delete", "tests for pure logic"],
-    "commitPrefix": ["feat:", "fix:", "refactor:", "test:", "docs:", "chore:"],
-    "versioning": "SemVer MAJOR breaking storage/routing, MINOR feature, PATCH fix"
+    "beforeWork": ["npm install (if lockfile changed)", "npm run build (clean baseline)"],
+    "beforeDone": ["npm run build", "node scripts/guardian.mjs", "npm test", "manual verify create/edit/status/collapse/drag/zoom/delete", "tests for pure logic"],
+    "commitPolicy": "EXCLUDED — user commits manually. Agents never run git commit/push/rebase or open PRs; no conventional-commit prefix, branch-naming, or PR-checklist enforcement.",
+    "versioning": "SemVer MAJOR breaking storage/routing, MINOR feature, PATCH fix (user-managed, not enforced)"
   },
   "changeMap": {
     "route/page": "src/app/",
@@ -69,5 +68,6 @@
   ],
   "conflictPolicy": "If user request conflicts with LOCKED, STOP and ask for OVERRIDE:<reason> — do not improvise",
   "validator": "node scripts/guardian.mjs",
-  "requiredChecks": ["guardian.mjs passes", "npm run build passes"]
+  "requiredChecks": ["guardian.mjs passes", "npm run build passes", "npm test passes"],
+  "builtInShield": "AGENTS.md — auto-loaded into every agent session; commit enforcement excluded"
 }
