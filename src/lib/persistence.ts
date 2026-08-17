@@ -1,4 +1,4 @@
-import type { CanvasData, CanvasIndex, CustomTheme, HeatmapMode, ThemeId } from './types';
+import type { Annotation, CanvasData, CanvasIndex, CustomTheme, HeatmapMode, ThemeId } from './types';
 import { makeNode } from './operations/nodes';
 import { children } from './operations/hierarchy';
 import { HORIZONTAL_INDENT, NODE_MIN_HEIGHT, NODE_WIDTH } from './types';
@@ -18,10 +18,34 @@ export function migrateCanvas(raw: unknown): CanvasData | null {
       y: Number(vp.y) || 0,
       zoom: Number(vp.zoom) || 1,
     };
-    // Return migrated canvas, preserving all existing fields including optional tint
+    // Annotations: optional; tolerate missing or garbage by keeping only valid entries
+    let annotations: Annotation[] | undefined;
+    if (Array.isArray(data.annotations)) {
+      const valid = (data.annotations as unknown[]).filter((a): a is Annotation => {
+        if (!a || typeof a !== 'object' || Array.isArray(a)) return false;
+        const ann = a as Record<string, unknown>;
+        const pos = ann.position as Record<string, unknown> | undefined;
+        return (
+          typeof ann.id === 'string' &&
+          ann.id.length > 0 &&
+          (ann.kind === 'text' || ann.kind === 'heading') &&
+          typeof ann.content === 'string' &&
+          !!pos &&
+          typeof pos === 'object' &&
+          !Array.isArray(pos) &&
+          typeof pos.x === 'number' &&
+          Number.isFinite(pos.x) &&
+          typeof pos.y === 'number' &&
+          Number.isFinite(pos.y)
+        );
+      });
+      if (valid.length > 0) annotations = valid;
+    }
+    // Return migrated canvas, preserving all existing fields including optional tint/annotations
     return {
       ...(data as object),
       viewport,
+      ...(annotations ? { annotations } : {}),
     } as unknown as CanvasData;
   } catch {
     return null;

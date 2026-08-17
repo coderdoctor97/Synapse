@@ -20,7 +20,7 @@ console.log('\n🛡️  Synapse Guardian — Validating session constitution...\
 console.log(`Root: ${root}\n`);
 
 // 1. Files exist
-const mustExist = ['ARCHITECTURE_v1.md','PROJECT_RULES.md','SYNAPSE_GUARDIAN.md','src/lib/types.ts','src/lib/persistence.ts','src/lib/store.ts','src/lib/operations/hierarchy.ts','src/lib/operations/nodes.ts','src/lib/operations/status.ts'];
+const mustExist = ['ARCHITECTURE_v1.md','PROJECT_RULES.md','SYNAPSE_GUARDIAN.md','AGENTS.md','src/lib/types.ts','src/lib/persistence.ts','src/lib/store.ts','src/lib/operations/hierarchy.ts','src/lib/operations/nodes.ts','src/lib/operations/status.ts'];
 for (const f of mustExist) {
   if (fs.existsSync(path.join(root, f))) ok(`Found ${f}`);
   else bad(`Missing required file: ${f}`);
@@ -161,6 +161,11 @@ try {
 } catch {}
 if (fs.existsSync(path.join(root,'SYNAPSE_GUARDIAN.md'))) ok('SYNAPSE_GUARDIAN.md active (session constitution)');
 else bad('Guardian constitution missing');
+if (fs.existsSync(path.join(root,'AGENTS.md'))) ok('AGENTS.md present (built-in shield, auto-loaded)');
+else bad('AGENTS.md missing — built-in shield required');
+
+// Commit carve-out: user commits manually — NOT enforced
+info('Commit policy: EXCLUDED — user commits manually. No commit/PR enforcement by this guardian.');
 
 // 8. Tests / CI
 console.log('\n── Testing & CI (ARCHITECTURE §7, §8) ──');
@@ -182,6 +187,6 @@ if (failed) {
   process.exit(1);
 } else {
   console.log('\x1b[32m✅ Guardian PASSED — session constitution obeyed. Clean to build.\x1b[0m');
-  console.log('   Next: npm run build must also pass.\n');
+  console.log('   Next: npm run build + npm test must also pass.\n');
   process.exit(0);
 }

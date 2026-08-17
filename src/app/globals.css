@@ -327,6 +327,7 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 }
 .empty-card h2{ font-family: 'Sora', sans-serif; font-size: 19px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
 .empty-card p{ font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 20px; }
+.empty-card .empty-hint{ font-size: 12px; color: var(--faint); font-weight: 500; }
 .empty-card .btn-primary{ padding: 10px 18px; font-size: 13px; }
 
 /* Modal (delete confirmation) */
@@ -731,4 +732,188 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
   right: 16px;
   bottom: 16px;
   z-index: 30;
+}
+
+/* V2-16 — Toolbar consolidation: icon-only toggle/undo/redo buttons */
+.tb-icon-btn{
+  width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+}
+
+/* V2-16 — Toolbar consolidation: single floating row (toolbar + export/import) */
+.tb-cluster{
+  position: absolute; top: 16px; left: 16px; z-index: 20;
+  display: flex; align-items: center; flex-wrap: wrap;
+  max-width: calc(100vw - 32px);
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+}
+.tb-cluster #toolbar{
+  position: static; max-width: 100%;
+  background: transparent; border: none; border-radius: 0; box-shadow: none;
+}
+.tb-cluster .portability-bar{
+  position: static;
+  background: transparent; border: none; border-radius: 0; box-shadow: none;
+  border-left: 1px solid var(--line);
+  margin-left: 4px; padding-left: 12px;
+}
+
+/* V2-17 — Sidebar organization: pin toggles, + page, drag & drop filing */
+.sidebar-icon-btn.pinned{ opacity: 1; color: var(--accent); }
+.sidebar-icon-btn.pinned:hover{ color: var(--accent-hover); }
+.sidebar-page-row[draggable="true"]{ cursor: grab; }
+.sidebar-page-row.is-dragging{ opacity: .45; }
+.sidebar-folder-row.is-drag-over{ background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.sidebar-drop-quick.is-drag-over{ color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); border-radius: 6px; }
+
+/* V2-18 — Fix sidebar row overflow: let the grid+flex chain shrink so long names truncate */
+.sidebar-content > .sidebar-section,
+.sidebar-section > .sidebar-folder,
+.sidebar-folder > .sidebar-folder-row,
+.sidebar-pages > .sidebar-page-row{
+  min-width: 0;
+}
+.sidebar-page-row .sidebar-page{ min-width: 0; }
+.sidebar-folder-row{
+  justify-content: space-between;
+  padding-right: 6px;
+  overflow: hidden;
+}
+.sidebar-folder-main{ overflow: hidden; }
+.sidebar-folder-actions{
+  display: flex; align-items: center; gap: 4px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* V2-19 — Subtle dotted grid on the infinite canvas */
+:root{ --dot-grid: rgba(100, 116, 139, 0.18); }
+[data-theme="dark"]{ --dot-grid: rgba(148, 163, 184, 0.10); }
+#viewport{
+  background-image: radial-gradient(circle, var(--dot-grid) 1px, transparent 1.5px);
+}
+
+/* V2-20 — Node color button: sibling of + / drag / delete action icons */
+.icon-btn.tint:hover{ background: var(--accent-soft); color: var(--accent); }
+
+/* V2-21 — Border beam on newly created node cards (pure CSS, ~5s) */
+@property --beam-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+.node-card.node-enter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--beam-angle),
+    transparent 0%, transparent 65%,
+    var(--accent) 82%, #ffffff 92%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: beam-rotate 1.5s linear infinite, beam-life 5s ease-in forwards;
+}
+@keyframes beam-rotate { to { --beam-angle: 360deg; } }
+@keyframes beam-life { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .node-card.node-enter::after { animation: none; opacity: 0; }
+}
+
+/* V2-16 — Lasso marquee + crosshair cursor while shift-dragging */
+.lasso-marquee{
+  position: absolute; z-index: 15;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+#viewport.lassoing{ cursor: crosshair; }
+
+/* V2-23 — Manual node resize: sized cards make the content area scroll instead of auto-growing */
+.node-card.is-sized .node-top{ flex: 1; min-height: 0; }
+.node-card.is-sized .node-main{ align-items: stretch; min-height: 0; }
+.node-card.is-sized .node-content,
+.node-card.is-sized .node-editor{ flex: 1 1 auto; min-height: 0; height: auto; max-height: none; overflow-y: auto; }
+.node-card.is-sized .node-editor{ resize: none; }
+.resize-grip{
+  position: absolute; right: 0; bottom: 0; z-index: 3;
+  width: 16px; height: 16px;
+  display: grid; place-items: center;
+  color: var(--faint); opacity: .3;
+  cursor: nwse-resize; touch-action: none;
+  transition: opacity .12s ease, color .12s ease;
+}
+.resize-grip::before{
+  content: ""; width: 7px; height: 7px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  border-bottom-right-radius: 2px;
+}
+.resize-grip:hover{ opacity: 1; color: var(--ink-2); }
+
+/* V2-24 — Annotations: free canvas text and headings */
+#annotations{ position: absolute; top: 0; left: 0; width: 0; height: 0; }
+.annotation{
+  position: absolute;
+  padding: 8px 10px;
+  min-width: 120px;
+  background: transparent;
+  cursor: grab; touch-action: none;
+  user-select: none; -webkit-user-select: none;
+}
+.annotation:active{ cursor: grabbing; }
+.annotation .ann-content{
+  font-size: 13.5px; line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap; word-break: break-word;
+  cursor: text;
+  padding: 2px 4px; margin: -2px -4px;
+  border-radius: 6px;
+}
+.annotation .ann-content:hover{ background: var(--hover); }
+.annotation .ann-content.is-empty{ color: var(--faint); }
+.annotation.ann-heading .ann-content,
+.annotation.ann-heading .ann-editor{
+  font-family: 'Sora', sans-serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--ink); letter-spacing: -.01em;
+}
+.annotation .ann-editor{
+  font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit;
+  background: transparent; border: none; outline: none; resize: none;
+  overflow: hidden;
+  width: 100%; min-width: 180px;
+  white-space: pre-wrap; word-break: break-word;
+  user-select: text; -webkit-user-select: text;
+}
+.annotation .ann-editor::placeholder{ color: var(--faint); }
+.annotation .ann-delete{
+  position: absolute; top: 0; right: 0;
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  border-radius: 6px;
+  color: var(--faint); opacity: 0;
+  font-size: 14px; line-height: 1;
+  transition: opacity .12s ease, background .12s ease, color .12s ease;
+}
+.annotation:hover .ann-delete{ opacity: 1; }
+.annotation .ann-delete:hover{ background: var(--danger-soft); color: var(--red); }
+
+/* V2-25 — Node text formatting (markdown-light: **bold** *italic* __underline__) */
+.node-content strong{ font-weight: 700; }
+.node-content em{ font-style: italic; }
+.node-content u{ text-decoration: underline; }
+
+/* V2-22 — Transparent PNG export: disabled state for the export bar button */
+.portability-btn:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+}
+.portability-btn:disabled:hover{
+  background: transparent;
 }

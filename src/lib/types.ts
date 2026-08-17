@@ -1,7 +1,10 @@
 export type Status = 'none' | 'failed' | 'review' | 'mastered';
 export type Position = { x:number; y:number };
-export type Node = { id:string; content:string; parentId:string|null; position:Position; status:Status; isCollapsed:boolean; tint?: string | null; createdAt:number; updatedAt:number };
-export type CanvasData = { id:string; name:string; nodes:Record<string,Node>; viewport:Position & {zoom:number}; createdAt:number; updatedAt:number };
+export type NodeSize = { width:number; height:number };
+export type Node = { id:string; content:string; parentId:string|null; position:Position; status:Status; isCollapsed:boolean; tint?: string | null; size?: NodeSize | null; createdAt:number; updatedAt:number };
+export type AnnotationKind = 'text' | 'heading';
+export type Annotation = { id:string; kind:AnnotationKind; content:string; position:Position; createdAt:number; updatedAt:number };
+export type CanvasData = { id:string; name:string; nodes:Record<string,Node>; viewport:Position & {zoom:number}; annotations?:Annotation[]; createdAt:number; updatedAt:number };
 export const STATUS_ORDER:Status[]=['none','failed','review','mastered'];
 export const STATUS_META:Record<Status,{label:string;color:string;short:string}>={none:{label:'Untagged',color:'#94a3b8',short:''},failed:{label:'Failed',color:'#ef4444',short:'F'},review:{label:'Needs review',color:'#f59e0b',short:'R'},mastered:{label:'Mastered',color:'#10b981',short:'M'}};
 export interface NodeTint { id: string; label: string; color: string; }
@@ -21,6 +24,6 @@ export const BUILT_IN_THEME_IDS=['light','dark'] as const;
 
 export interface PortableCanvas { format: 'synapse-canvas'; formatVersion: number; name: string; viewport: { x: number; y: number; zoom: number }; nodes: Record<string, Node>; }
 
-export interface Folder { id: string; name: string; parentId: string | null; createdAt: number; updatedAt: number; }
-export interface PageMeta { id: string; name: string; folderId: string | null; createdAt: number; updatedAt: number; }
+export interface Folder { id: string; name: string; parentId: string | null; pinned?: boolean; createdAt: number; updatedAt: number; }
+export interface PageMeta { id: string; name: string; folderId: string | null; pinned?: boolean; createdAt: number; updatedAt: number; }
 export interface CanvasIndex { schemaVersion: number; folders: Record<string, Folder>; pages: Record<string, PageMeta>; }

@@ -1,8 +1,10 @@
 # 🛡️ SYNAPSE GUARDIAN — Session Constitution
 
-> **Status: ACTIVE for this session** — 2026-08-16
-> This file is the built-in enforcement system that merges `ARCHITECTURE_v1.md` + `PROJECT_RULES.md` into a single runtime constitution.
+> **Status: ACTIVE (built-in shield)** — 2026-08-16
+> This file is the session constitution backing `AGENTS.md`, which is the **built-in shield** auto-loaded into every agent session.
+> Together they merge `ARCHITECTURE_v1.md` + `PROJECT_RULES.md` into a single runtime constitution.
 > **Every AI action in this session MUST obey this file. If a user request conflicts, STOP and ASK — do not improvise.**
+> **COMMIT ENFORCEMENT IS EXCLUDED:** the user commits manually — see §7 below.
 
 ---
 
@@ -161,24 +163,27 @@ node scripts/guardian.mjs  # THIS guardian validator (new)
 
 ## 7. WORKFLOW — For Every Feature/Bug Fix
 
-1. Pull/rebase, `npm install`, `npm run build` clean baseline.
-2. Create focused branch: `feat/*`, `fix/*`, `refactor/*`, `chore/*`.
-3. Keep domain logic out of components (see map above).
-4. **Add/update tests first** for pure logic.
-5. Manual browser verify: create, edit, status cycle, collapse/expand, drag, zoom/pan, delete.
-6. `npm run build` + `node scripts/guardian.mjs`
-7. Small conventional commits: `feat: add X`, `fix: Y`, `refactor: Z`, `test: ...`, `docs: ...`, `chore: ...`
+1. `npm install` if lockfile changed; `npm run build` clean baseline.
+2. Keep domain logic out of components (see map above).
+3. **Add/update tests first** for pure logic.
+4. Manual browser verify: create, edit, status cycle, collapse/expand, drag, zoom/pan, delete.
+5. `npm run build` + `node scripts/guardian.mjs` + `npm test` — all must pass.
 
-**PR Acceptance Checklist (must all be ✅):**
+**COMMITS — EXCLUDED (user commits manually):**
+- Agents must **never** run `git commit`, `git push`, `git rebase`, or open PRs.
+- Conventional-commit prefixes, branch naming (`feat/*`, `fix/*`), PR checklists, and versioning gates are **NOT enforced** by this guardian.
+- Leave the working tree uncommitted for the user to review and commit.
+
+**Completion Checklist (must all be ✅):**
 - [ ] `npm run build` succeeds
 - [ ] `node scripts/guardian.mjs` passes (no locked violations)
+- [ ] `npm test` passes
 - [ ] Existing interactions still work (list in #6)
 - [ ] New pure logic has tests (`tests/hierarchy.test.ts`, etc.)
 - [ ] Works at desktop + narrow width
 - [ ] No storage-key migration without migration strategy
-- [ ] PR description docs behavior + data-shape change
 
-**Versioning:** SemVer — MAJOR breaking storage/routing, MINOR feature, PATCH fix.
+**Versioning (user-managed):** SemVer — MAJOR breaking storage/routing, MINOR feature, PATCH fix.
 
 ---
 
@@ -246,7 +251,8 @@ These are *planned* but not yet approved to build unless explicitly requested:
 
 ## 12. GUARDIAN SELF-CHECK — How To Verify It's Active
 
-Run:
+1. `AGENTS.md` exists at the project root (auto-loaded shield).
+2. Run:
 ```bash
 node scripts/guardian.mjs
 ```

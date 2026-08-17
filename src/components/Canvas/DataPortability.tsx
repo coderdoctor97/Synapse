@@ -1,9 +1,13 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useCanvasStore } from '@/lib/store';
+import type { Annotation } from '@/lib/types';
 import { parseImportedCanvas, serializeCanvas } from '@/lib/portability';
+import { visibleOrder } from '@/lib/operations/hierarchy';
+import { exportCanvasPng } from '@/lib/exportPng';
 import DownloadIcon from '@mui/icons-material/Download';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import ImageIcon from '@mui/icons-material/Image';
 
 function sanitize(name: string): string {
   const s = name.trim().replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
@@ -14,9 +18,21 @@ export default function DataPortability() {
   const canvas = useCanvasStore(s => s.canvas);
   const replaceCanvasContents = useCanvasStore(s => s.replaceCanvasContents);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [pending, setPending] = useState<{ name: string; nodes: Record<string, any>; viewport: { x: number; y: number; zoom: number } } | null>(null);
+  const [pending, setPending] = useState<{ name: string; nodes: Record<string, any>; viewport: { x: number; y: number; zoom: number }; annotations?: Annotation[] } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState('Import failed');
+
+  const onExportPng = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await exportCanvasPng();
+      setError(null);
+    } catch {
+      setErrorTitle('Export failed');
+      setError('PNG export failed. Please try again.');
+    }
+  };
 
   const onExport = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,7 +97,7 @@ export default function DataPortability() {
         // ignore backup errors, still proceed to replace
       }
     }
-    replaceCanvasContents(pending.name, pending.nodes, pending.viewport);
+    replaceCanvasContents(pending.name, pending.nodes, pending.viewport, pending.annotations);
     setConfirmOpen(false);
     setPending(null);
   };
@@ -112,6 +128,16 @@ export default function DataPortability() {
         >
           <FileUploadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
           Export
+        </button>
+        <button
+          className="portability-btn"
+          onClick={onExportPng}
+          disabled={!canvas || visibleOrder(canvas).length === 0}
+          title="Export PNG (transparent)"
+          aria-label="Export PNG (transparent)"
+        >
+          <ImageIcon sx={{ fontSize: 16 }} aria-hidden="true" />
+          PNG
         </button>
         <button
           className="portability-btn"
@@ -190,7 +216,7 @@ export default function DataPortability() {
                 <path d="M12 16h.01" />
               </svg>
             </div>
-            <h3 id="portability-error-title">Import failed</h3>
+            <h3 id="portability-error-title">{errorTitle}</h3>
             <p>{error}</p>
             <div className="modal-actions">
               <button className="btn btn-primary" onClick={closeError} onPointerDown={e => e.stopPropagation()}>

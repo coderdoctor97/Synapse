@@ -1,16 +1,17 @@
 'use client';
 
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useRef} from 'react';
+import {useCanvasStore} from '@/lib/store';
 
 export default function HelpPanel() {
- const [open,setOpen]=useState<boolean>(false);
+ const open=useCanvasStore(s=>s.helpOpen), setHelpOpen=useCanvasStore(s=>s.setHelpOpen);
  const triggerRef=useRef<HTMLButtonElement>(null), closeRef=useRef<HTMLButtonElement>(null);
 
  useEffect(()=>{
   if(!open)return;
   closeRef.current?.focus();
   const handleKeyDown=(event:KeyboardEvent)=>{
-   if(event.key==='Escape')setOpen(false);
+   if(event.key==='Escape')setHelpOpen(false);
   };
   window.addEventListener('keydown',handleKeyDown);
   return()=>{
@@ -20,15 +21,15 @@ export default function HelpPanel() {
  },[open]);
 
  return <>
-  <button ref={triggerRef} type="button" className="faq-button" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setOpen(true)}} onPointerDown={event=>event.stopPropagation()}>
+  <button ref={triggerRef} type="button" className="faq-button" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setHelpOpen(true)}} onPointerDown={event=>event.stopPropagation()}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="800" font-family="Sora, Inter, system-ui, sans-serif" fill="white">?</text></svg>
     <span className="tooltip">Help</span>
   </button>
-  {open&&<div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setOpen(false)}} onPointerDown={event=>event.stopPropagation()}>
+  {open&&<div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setHelpOpen(false)}} onPointerDown={event=>event.stopPropagation()}>
    <div className="help-modal" onClick={event=>event.stopPropagation()} onPointerDown={event=>event.stopPropagation()}>
     <div className="help-header">
      <h2 id="help-title">How to use Synapse</h2>
-     <button ref={closeRef} type="button" className="help-close" aria-label="Close help" onClick={event=>{event.stopPropagation();setOpen(false)}} onPointerDown={event=>event.stopPropagation()}>×</button>
+     <button ref={closeRef} type="button" className="help-close" aria-label="Close help" onClick={event=>{event.stopPropagation();setHelpOpen(false)}} onPointerDown={event=>event.stopPropagation()}>×</button>
     </div>
     <div className="help-content">
      <section className="help-section">
@@ -45,7 +46,7 @@ export default function HelpPanel() {
       <h3>Organize branches</h3>
       <ul>
        <li>Click the chevron <code>›</code> to collapse or expand one branch only.</li>
-       <li>Use Collapse All / Expand All in the toolbar.</li>
+       <li>The toolbar button with inward chevrons collapses everything; it becomes outward chevrons to expand everything.</li>
        <li>Collapsed branches show summary chips for their hidden children.</li>
       </ul>
      </section>
@@ -60,6 +61,7 @@ export default function HelpPanel() {
       <h3>Shortcuts</h3>
       <ul>
        <li>Select a node, then press 1, 2, or 3 to tag it Failed, Review, or Mastered. Press 0 to clear the tag.</li>
+       <li>While editing a node, <code>Ctrl+B</code> / <code>Ctrl+I</code> / <code>Ctrl+U</code> (<code>⌘</code> on Mac) make the selected text bold, italic, or underlined.</li>
        <li>Press Esc to deselect.</li>
       </ul>
      </section>
@@ -122,7 +124,10 @@ export default function HelpPanel() {
       <h3>Library</h3>
       <ul>
        <li>The sidebar lists your folders and pages. Click a page to open it.</li>
-       <li>Use New folder and New page to organize your canvas into pages.</li>
+       <li>Use New folder and Quick Note to organize your canvas into pages.</li>
+       <li>Quick Note creates a scratch page. Drag it onto a folder to file it, or use + on a folder to add a page directly.</li>
+       <li>Drag a page onto Quick Notes to move it back out.</li>
+       <li>Pin folders or pages to keep them at the top.</li>
       </ul>
      </section>
      <section className="help-section">

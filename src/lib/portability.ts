@@ -1,10 +1,10 @@
-import type { CanvasData, Node, PortableCanvas } from './types';
+import type { Annotation, CanvasData, Node, PortableCanvas } from './types';
 
 export const PORTABLE_FORMAT = 'synapse-canvas' as const;
 export const PORTABLE_FORMAT_VERSION = 1 as const;
 
 export type ParseImportResult =
-  | { ok: true; name: string; nodes: Record<string, Node>; viewport: { x: number; y: number; zoom: number } }
+  | { ok: true; name: string; nodes: Record<string, Node>; viewport: { x: number; y: number; zoom: number }; annotations: Annotation[] }
   | { ok: false; error: string };
 
 export function buildExportCanvas(canvas: CanvasData): PortableCanvas {
@@ -16,6 +16,9 @@ export function buildExportCanvas(canvas: CanvasData): PortableCanvas {
     nodes: Object.fromEntries(
       Object.entries(canvas.nodes).map(([id, node]) => [id, { ...node }])
     ) as Record<string, Node>,
+    ...(canvas.annotations && canvas.annotations.length > 0
+      ? { annotations: canvas.annotations.map(a => ({ ...a })) }
+      : {}),
   };
 }
 
@@ -114,6 +117,23 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
       tint = null;
     }
 
+    // size: optional {width,height} — accepted only when positive finite numbers, else dropped
+    let size: { width: number; height: number } | undefined;
+    const sz = n.size as Record<string, unknown> | undefined;
+    if (
+      sz &&
+      typeof sz === 'object' &&
+      !Array.isArray(sz) &&
+      typeof sz.width === 'number' &&
+      Number.isFinite(sz.width) &&
+      sz.width > 0 &&
+      typeof sz.height === 'number' &&
+      Number.isFinite(sz.height) &&
+      sz.height > 0
+    ) {
+      size = { width: sz.width, height: sz.height };
+    }
+
     const createdAt =
       typeof n.createdAt === 'number' && Number.isFinite(n.createdAt) ? n.createdAt : now;
     const updatedAt =
@@ -129,6 +149,9 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
       createdAt,
       updatedAt,
     };
+    if (size) {
+      node.size = size;
+    }
     if (tint !== null) {
       node.tint = tint;
     } else if (n.tint === null) {
@@ -152,6 +175,36 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
   }
 
   // name: string default "Imported canvas"
+  // annotations: optional, parsed leniently (invalid entries are dropped)
+  const annotations: Annotation[] = [];
+  if (Array.isArray(obj.annotations)) {
+    for (const rawAnn of obj.annotations as unknown[]) {
+      if (!rawAnn || typeof rawAnn !== 'object' || Array.isArray(rawAnn)) continue;
+      const a = rawAnn as Record<string, unknown>;
+      if (typeof a.id !== 'string' || a.id.length === 0) continue;
+      const pos = a.position as Record<string, unknown> | undefined;
+      if (
+        !pos ||
+        typeof pos !== 'object' ||
+        Array.isArray(pos) ||
+        typeof pos.x !== 'number' ||
+        !Number.isFinite(pos.x) ||
+        typeof pos.y !== 'number' ||
+        !Number.isFinite(pos.y)
+      ) {
+        continue;
+      }
+      annotations.push({
+        id: a.id,
+        kind: a.kind === 'heading' ? 'heading' : 'text',
+        content: typeof a.content === 'string' ? a.content : '',
+        position: { x: pos.x, y: pos.y },
+        createdAt: typeof a.createdAt === 'number' && Number.isFinite(a.createdAt) ? a.createdAt : now,
+        updatedAt: typeof a.updatedAt === 'number' && Number.isFinite(a.updatedAt) ? a.updatedAt : now,
+      });
+    }
+  }
+
   const name = typeof obj.name === 'string' && obj.name.trim().length > 0 ? obj.name : 'Imported canvas';
 
   // viewport: numeric {x,y,zoom} default {0,0,1}
@@ -164,5 +217,5 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
     viewport = { x, y, zoom };
   }
 
-  return { ok: true, name, nodes, viewport };
+  return { ok: true, name, nodes, viewport, annotations };
 }

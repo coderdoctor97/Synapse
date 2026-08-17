@@ -11,6 +11,22 @@ function sanitize(name: string): string {
   return s || 'canvas';
 }
 
+function PinIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
+    </svg>
+  );
+}
+
+const PAGE_DRAG_TYPE = 'text/synapse-page';
+
+function isPageDrag(dt: DataTransfer): boolean {
+  return Array.from(dt.types).includes(PAGE_DRAG_TYPE);
+}
+
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -25,6 +41,9 @@ export default function Sidebar() {
   const renamePage = useCanvasStore(s => s.renamePage);
   const deletePage = useCanvasStore(s => s.deletePage);
   const deleteFolder = useCanvasStore(s => s.deleteFolder);
+  const toggleFolderPin = useCanvasStore(s => s.toggleFolderPin);
+  const togglePagePin = useCanvasStore(s => s.togglePagePin);
+  const movePageToFolder = useCanvasStore(s => s.movePageToFolder);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
@@ -32,6 +51,9 @@ export default function Sidebar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [confirmPage, setConfirmPage] = useState<{ id: string; name: string } | null>(null);
   const [confirmFolder, setConfirmFolder] = useState<{ id: string; name: string } | null>(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [dragOverQuick, setDragOverQuick] = useState(false);
+  const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
 
   // Extract active page id from pathname /canvas/[id]
   const activePageId = useMemo(() => {
@@ -208,10 +230,10 @@ export default function Sidebar() {
             if (id) router.push('/canvas/' + id);
           }}
           onPointerDown={e => e.stopPropagation()}
-          title="New page"
-          aria-label="New page"
+          title="Quick Note"
+          aria-label="Quick Note"
         >
-          ＋ Page
+          ＋ Quick Note
         </button>
       </div>
 
@@ -251,7 +273,27 @@ export default function Sidebar() {
                       />
                     </div>
                   ) : (
-                    <div className="sidebar-folder-row">
+                    <div
+                      className={`sidebar-folder-row${dragOverFolderId === folder.id ? ' is-drag-over' : ''}`}
+                      onDragOver={e => {
+                        if (!isPageDrag(e.dataTransfer)) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        setDragOverFolderId(folder.id);
+                      }}
+                      onDragLeave={e => {
+                        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+                        setDragOverFolderId(prev => (prev === folder.id ? null : prev));
+                      }}
+                      onDrop={e => {
+                        if (!isPageDrag(e.dataTransfer)) return;
+                        e.preventDefault();
+                        const id = e.dataTransfer.getData(PAGE_DRAG_TYPE);
+                        setDragOverFolderId(null);
+                        setDraggedPageId(null);
+                        if (id) movePageToFolder(id, folder.id);
+                      }}
+                    >
                       <button
                         className="sidebar-folder-main"
                         onClick={e => {
@@ -266,6 +308,38 @@ export default function Sidebar() {
                         <span className="sidebar-folder-icon">📁</span>
                         <span className="sidebar-folder-name">{folder.name}</span>
                         <span className="sidebar-count">{pages.length}</span>
+                      </button>
+                      <div className="sidebar-folder-actions">
+                      <button
+                        className="sidebar-icon-btn"
+                        onClick={e => {
+                          e.stopPropagation();
+                          const pid = addPage('Untitled', folder.id);
+                          if (pid) {
+                            setExpanded(prev => {
+                              const next = new Set(prev);
+                              next.add(folder.id);
+                              return next;
+                            });
+                          }
+                        }}
+                        onPointerDown={e => e.stopPropagation()}
+                        title="Add page"
+                        aria-label="Add page"
+                      >
+                        ＋
+                      </button>
+                      <button
+                        className={`sidebar-icon-btn${folder.pinned ? ' pinned' : ''}`}
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleFolderPin(folder.id);
+                        }}
+                        onPointerDown={e => e.stopPropagation()}
+                        title={folder.pinned ? 'Unpin folder' : 'Pin folder'}
+                        aria-label="Pin folder"
+                      >
+                        <PinIcon filled={!!folder.pinned} />
                       </button>
                       <button
                         className="sidebar-icon-btn"
@@ -291,6 +365,7 @@ export default function Sidebar() {
                       >
                         🗑
                       </button>
+                      </div>
                     </div>
                   )}
                   {isExpanded && (
@@ -326,7 +401,22 @@ export default function Sidebar() {
                             );
                           }
                           return (
-                            <div key={page.id} className={`sidebar-page-row ${activePageId === page.id ? 'is-active' : ''}`}>
+                            <div
+                              key={page.id}
+                              draggable
+                              onDragStart={e => {
+                                e.stopPropagation();
+                                e.dataTransfer.setData(PAGE_DRAG_TYPE, page.id);
+                                e.dataTransfer.effectAllowed = 'move';
+                                setDraggedPageId(page.id);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedPageId(null);
+                                setDragOverFolderId(null);
+                                setDragOverQuick(false);
+                              }}
+                              className={`sidebar-page-row ${activePageId === page.id ? 'is-active' : ''}${draggedPageId === page.id ? ' is-dragging' : ''}`}
+                            >
                               <button
                                 className={`sidebar-page ${activePageId === page.id ? 'is-active' : ''}`}
                                 onClick={e => {
@@ -338,6 +428,18 @@ export default function Sidebar() {
                               >
                                 <span className="sidebar-page-icon">📄</span>
                                 <span className="sidebar-page-name">{page.name}</span>
+                              </button>
+                              <button
+                                className={`sidebar-icon-btn${page.pinned ? ' pinned' : ''}`}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  togglePagePin(page.id);
+                                }}
+                                onPointerDown={e => e.stopPropagation()}
+                                title={page.pinned ? 'Unpin page' : 'Pin page'}
+                                aria-label="Pin page"
+                              >
+                                <PinIcon filled={!!page.pinned} />
                               </button>
                               <button
                                 className="sidebar-icon-btn"
@@ -378,7 +480,29 @@ export default function Sidebar() {
         </div>
 
         <div className="sidebar-section">
-          <div className="sidebar-section-header">Pages</div>
+          <div
+            className={`sidebar-section-header sidebar-drop-quick${dragOverQuick ? ' is-drag-over' : ''}`}
+            onDragOver={e => {
+              if (!isPageDrag(e.dataTransfer)) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setDragOverQuick(true);
+            }}
+            onDragLeave={e => {
+              if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+              setDragOverQuick(false);
+            }}
+            onDrop={e => {
+              if (!isPageDrag(e.dataTransfer)) return;
+              e.preventDefault();
+              const id = e.dataTransfer.getData(PAGE_DRAG_TYPE);
+              setDragOverQuick(false);
+              setDraggedPageId(null);
+              if (id) movePageToFolder(id, null);
+            }}
+          >
+            Quick Notes
+          </div>
           {unorganizedPages.length === 0 ? (
             <div className="sidebar-empty subtle">No pages</div>
           ) : (
@@ -411,7 +535,22 @@ export default function Sidebar() {
                   );
                 }
                 return (
-                  <div key={page.id} className={`sidebar-page-row ${activePageId === page.id ? 'is-active' : ''}`}>
+                  <div
+                    key={page.id}
+                    draggable
+                    onDragStart={e => {
+                      e.stopPropagation();
+                      e.dataTransfer.setData(PAGE_DRAG_TYPE, page.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                      setDraggedPageId(page.id);
+                    }}
+                    onDragEnd={() => {
+                      setDraggedPageId(null);
+                      setDragOverFolderId(null);
+                      setDragOverQuick(false);
+                    }}
+                    className={`sidebar-page-row ${activePageId === page.id ? 'is-active' : ''}${draggedPageId === page.id ? ' is-dragging' : ''}`}
+                  >
                     <button
                       className={`sidebar-page ${activePageId === page.id ? 'is-active' : ''}`}
                       onClick={e => {
@@ -423,6 +562,18 @@ export default function Sidebar() {
                     >
                       <span className="sidebar-page-icon">📄</span>
                       <span className="sidebar-page-name">{page.name}</span>
+                    </button>
+                    <button
+                      className={`sidebar-icon-btn${page.pinned ? ' pinned' : ''}`}
+                      onClick={e => {
+                        e.stopPropagation();
+                        togglePagePin(page.id);
+                      }}
+                      onPointerDown={e => e.stopPropagation()}
+                      title={page.pinned ? 'Unpin page' : 'Pin page'}
+                      aria-label="Pin page"
+                    >
+                      <PinIcon filled={!!page.pinned} />
                     </button>
                     <button
                       className="sidebar-icon-btn"

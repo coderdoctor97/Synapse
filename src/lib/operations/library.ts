@@ -8,8 +8,13 @@ function cloneIndex(index: CanvasIndex): CanvasIndex {
   };
 }
 
-function sortByCreatedAt<T extends { createdAt: number }>(arr: T[]): T[] {
-  return [...arr].sort((a, b) => a.createdAt - b.createdAt);
+function sortPinnedFirstThenCreatedAt<T extends { pinned?: boolean; createdAt: number }>(arr: T[]): T[] {
+  return [...arr].sort((a, b) => {
+    const ap = a.pinned ? 1 : 0;
+    const bp = b.pinned ? 1 : 0;
+    if (ap !== bp) return bp - ap;
+    return a.createdAt - b.createdAt;
+  });
 }
 
 // Folders
@@ -61,6 +66,14 @@ export function deleteFolder(index: CanvasIndex, folderId: string): CanvasIndex 
       next.pages[id] = { ...page, folderId: parentId, updatedAt: Date.now() };
     }
   }
+  return next;
+}
+
+export function toggleFolderPinned(index: CanvasIndex, folderId: string): CanvasIndex {
+  const folder = index.folders[folderId];
+  if (!folder) return index;
+  const next = cloneIndex(index);
+  next.folders[folderId] = { ...folder, pinned: !folder.pinned, updatedAt: Date.now() };
   return next;
 }
 
@@ -127,6 +140,14 @@ export function deletePageMeta(index: CanvasIndex, pageId: string): CanvasIndex 
   return next;
 }
 
+export function togglePagePinned(index: CanvasIndex, pageId: string): CanvasIndex {
+  const page = index.pages[pageId];
+  if (!page) return index;
+  const next = cloneIndex(index);
+  next.pages[pageId] = { ...page, pinned: !page.pinned, updatedAt: Date.now() };
+  return next;
+}
+
 export function movePage(
   index: CanvasIndex,
   pageId: string,
@@ -144,19 +165,19 @@ export function movePage(
 // Queries
 
 export function getFoldersSorted(index: CanvasIndex): Folder[] {
-  return sortByCreatedAt(Object.values(index.folders));
+  return sortPinnedFirstThenCreatedAt(Object.values(index.folders));
 }
 
 export function getPagesSorted(index: CanvasIndex): PageMeta[] {
-  return sortByCreatedAt(Object.values(index.pages));
+  return sortPinnedFirstThenCreatedAt(Object.values(index.pages));
 }
 
 export function getFoldersInFolder(index: CanvasIndex, parentId: string | null): Folder[] {
-  return sortByCreatedAt(Object.values(index.folders).filter(f => f.parentId === parentId));
+  return sortPinnedFirstThenCreatedAt(Object.values(index.folders).filter(f => f.parentId === parentId));
 }
 
 export function getPagesInFolder(index: CanvasIndex, folderId: string | null): PageMeta[] {
-  return sortByCreatedAt(Object.values(index.pages).filter(p => p.folderId === folderId));
+  return sortPinnedFirstThenCreatedAt(Object.values(index.pages).filter(p => p.folderId === folderId));
 }
 
 export function getFolder(index: CanvasIndex, id: string): Folder | undefined {
