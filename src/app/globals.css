@@ -49,6 +49,7 @@
   --help-overlay: rgba(15,23,42,.48);
   --dot-grid: #c3cad8;
   --edge-line: #c3cad6;
+  --wire-color: #6b7280;
   --on-accent: #fff;
   --brand-secondary: #7c3aed;
   --brand-shadow: rgba(79,70,229,.55);
@@ -117,9 +118,9 @@ button:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; bor
 }
 #viewport.panning{ cursor: grabbing; }
 body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
-#world{ position: absolute; top: 0; left: 0; width: 0; height: 0; transform-origin: 0 0; }
-#edges{ position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
-#edges path{ fill: none; stroke-width: 1.75; opacity: .9; }
+#world{ position: absolute; top: 0; left: 0; min-width: 1px; min-height: 1px; transform-origin: 0 0; }
+#edges{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+#edges path{ fill: none; stroke-width: 3; opacity: .9; }
 #nodes{ position: absolute; top: 0; left: 0; width: 0; height: 0; }
 
 /* ---------- Node card (Node.tsx) ---------- */
@@ -272,7 +273,7 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .btn-primary:hover{ background: var(--accent-hover); }
 
 /* View / zoom bar */
-#viewbar{ top: 16px; right: 16px; display: flex; align-items: center; gap: 2px; padding: 6px; }
+#viewbar{ top: 16px; right: 16px; display: flex; align-items: center; gap: 6px; padding: 6px; }
 .zb-btn{
   min-width: 30px; height: 30px; padding: 0 7px;
   display: grid; place-items: center;
@@ -294,19 +295,28 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 #save-ind.show{ opacity: 1; transform: translateY(0); color: var(--success); }
 #save-ind.show .dot{ background: var(--green); box-shadow: 0 0 0 3px var(--success-soft); }
 
-/* Legend / knowledge heat */
-#legend{ left: 16px; bottom: 16px; padding: 12px 14px; width: 228px; }
-#legend h4{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); font-weight: 700; margin-bottom: 8px; }
-.legend-row{ display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); padding: 2.5px 0; }
-.legend-row .sw{ width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
-.legend-row .k{ flex: 1; font-weight: 500; }
-.legend-row .v{ font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 11.5px; }
-#health-wrap{ margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-#health-bar{ display: flex; height: 7px; border-radius: 999px; overflow: hidden; background: var(--health-bg); }
-#health-bar i{ display: block; height: 100%; transition: width .4s ease; }
-#health-caption{ font-size: 11px; color: var(--muted); margin-top: 7px; line-height: 1.4; }
+/* Knowledge Dial — expanded (donut + legend) */
+.dial-card{ position: fixed; left: 16px; bottom: 16px; padding: 14px; width: 260px; transition: left .3s ease, opacity .16s ease; }
+.dial-grid{ display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; }
+.dial-ring-wrap{ display: flex; align-items: center; justify-content: center; }
+.dial-ring{ --seg-dur: .5s; }
+.dial-seg{ animation: dial-in var(--seg-dur) ease both; }
+@keyframes dial-in{ from{ opacity: .15; } to{ opacity: 1; } }
 
-@media (max-width: 760px){ #legend{ display: none; } .brand-sub{ display: none; } .tb-sep{ display: none; } }
+.dial-legend{ display: flex; flex-direction: column; gap: 4px; }
+.dial-legend-row{ display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); }
+.dial-legend-sw{ width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.dial-legend-label{ flex: 1; font-weight: 500; }
+.dial-legend-val{ font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 11px; }
+.dial-empty{ font-size: 11px; color: var(--muted); margin: 4px 0 0; line-height: 1.4; }
+.dial-header-actions{ position: absolute; top: 8px; right: 8px; display: flex; gap: 2px; }
+
+@media (max-width: 760px){ .dial-card{ display: none; } .brand-sub{ display: none; } .tb-sep{ display: none; } }
+
+/* Knowledge Dial — mini donut (collapsed) */
+.dial-mini{ position: fixed; left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 4px; border-radius: 50%; cursor: pointer; user-select: none; transition: left .3s ease; animation: heatmap-fade-in .18s ease; }
+.dial-mini:hover{ background: var(--hover); }
+.dial-mini-hide{ flex-shrink: 0; }
 
 /* Empty state */
 #empty-state{ position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; pointer-events: none; }
@@ -357,6 +367,27 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .btn-danger{ background: var(--red); color: var(--on-accent); }
 .btn-danger:hover{ background: var(--danger-hover); }
 
+/* ---- Export Modal ---- */
+.export-modal-overlay{ z-index: 102; }
+.export-modal-sub{ font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
+.export-options{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.export-option-card{
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); text-align: left; cursor: pointer;
+  transition: background .13s ease, border-color .13s ease, transform .1s ease;
+}
+.export-option-card:hover{ background: var(--hover); border-color: var(--accent); transform: translateY(-1px); }
+.export-option-icon{
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--accent-soft); display: grid; place-items: center;
+  flex: 0 0 auto; color: var(--ink);
+}
+.export-option-text{ display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.export-option-label{ font-size: 13px; font-weight: 600; color: var(--ink); }
+.export-option-sub{ font-size: 11px; color: var(--muted); line-height: 1.45; }
+@media (max-width: 420px){ .export-options{ grid-template-columns: 1fr; } }
+
 /* ---- V2-01: Heatmap panel controls ---- */
 .heatmap-header{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .heatmap-header h4{ margin-bottom: 8px; }
@@ -364,17 +395,7 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .heatmap-icon-btn{ width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: 6px; color: var(--faint); font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
 .heatmap-icon-btn:hover{ background: var(--hover); color: var(--ink-2); }
 
-/* ---- V2-01: Heatmap mini bar ---- */
-.heatmap-mini{ left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 12px; padding: 7px 8px 7px 14px; border-radius: 999px; cursor: pointer; user-select: none; animation: heatmap-fade-in .18s ease; }
-.heatmap-mini:hover{ border-color: var(--line-2); }
-.heatmap-mini-pair{ display: inline-flex; align-items: center; gap: 5px; }
-.heatmap-mini-dot{ width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
-.heatmap-mini-count{ font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2); line-height: 1; }
 @keyframes heatmap-fade-in{ from{ opacity: 0; transform: translateY(4px); } to{ opacity: 1; transform: translateY(0); } }
-
-/* ---- V2-01: Heatmap restore button (hidden state) ---- */
-.heatmap-restore{ left: 16px; bottom: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; color: var(--muted); padding: 0; animation: heatmap-fade-in .18s ease; }
-.heatmap-restore:hover{ color: var(--ink-2); border-color: var(--line-2); }
 
 /* ---- V2-02: Help panel ---- */
 .help-trigger{
@@ -515,10 +536,10 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 
 /* V2-08 — Portability: export */
 .portability-bar{ top: 78px; left: 16px; display:flex; align-items:center; gap:6px; padding:6px 8px; }
-.portability-btn{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--ink-2); padding:7px 11px; border-radius:9px; border:1px solid var(--line); background:var(--surface); transition: background .13s ease, color .13s ease, border-color .13s ease; white-space:nowrap; }
+.portability-btn{ display:inline-flex; align-items:center; padding:6px; border-radius:9px; border:1px solid var(--line); background:var(--surface); transition: background .13s ease, color .13s ease, border-color .13s ease; }
 .portability-btn:hover{ background:var(--hover); border-color:var(--line-2); }
 .portability-btn svg{ flex:0 0 auto; }
-@media (max-width: 480px){ .portability-bar{ top: 72px; left: 12px; padding:5px 6px; } .portability-btn{ font-size:12px; padding:6px 10px; } }
+@media (max-width: 480px){ .portability-bar{ top: 72px; left: 12px; padding:5px 6px; } .portability-btn{ padding:5px; } }
 
 /* V2-09 — Portability: import + confirm/error */
 .portability-file{ display: none; }
@@ -917,3 +938,76 @@ body.is-dragging, body.is-dragging *{ cursor: grabbing !important; }
 .portability-btn:disabled:hover{
   background: transparent;
 }
+
+/* ---- Focus mode (distraction-free recall) ---- */
+.canvas-layout.focus-mode .sidebar{ opacity: 0; pointer-events: none; }
+.canvas-layout.focus-mode .tb-cluster,
+.canvas-layout.focus-mode #viewbar,
+.canvas-layout.focus-mode .help-trigger,
+.canvas-layout.focus-mode .dial-card,
+.canvas-layout.focus-mode .selection-hint{ opacity: 0; pointer-events: none; }
+.canvas-layout .sidebar,
+.canvas-layout .tb-cluster,
+.canvas-layout #viewbar,
+.canvas-layout .help-trigger,
+.canvas-layout .dial-card,
+.canvas-layout .selection-hint{ transition: opacity .16s ease; }
+.focus-exit-pill{
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--panel-bg); border: 1px solid var(--line); border-radius: 999px;
+  box-shadow: var(--shadow-md); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  transition: background .13s ease, color .13s ease, border-color .13s ease;
+}
+.focus-exit-pill:hover{ background: var(--hover); color: var(--ink-2); border-color: var(--line-2); }
+
+/* ---- Hover lineage: edges highlight path to root ---- */
+#edges path{ transition: opacity .12s ease, stroke .12s ease, stroke-width .12s ease; }
+#edges path.edge-chain{ stroke: var(--accent) !important; stroke-width: 2.5; opacity: 1; }
+#edges path.edge-dim{ opacity: .35; }
+
+/* ---- Reveal on expand: staggered children ---- */
+.node-card.node-reveal{ animation: reveal .28s ease both; }
+@keyframes reveal{
+  from{ opacity: 0; transform: translateY(6px) scale(.97); }
+  to  { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce){
+  .node-card.node-reveal{ animation: none; }
+}
+
+/* ---- Dot grid visibility (V2-19 refinement) ---- */
+:root{ --dot-grid: rgba(71, 85, 105, 0.26); }
+[data-theme="dark"]{ --dot-grid: rgba(148, 163, 184, 0.16); }
+
+/* ---- Sidebar icon language: crisp SVG, dark-theme aware ---- */
+.sidebar-folder-icon,
+.sidebar-page-icon{
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+.sidebar-folder-icon svg,
+.sidebar-page-icon svg{ display: block; }
+[data-theme="dark"] .sidebar-folder-icon svg{ color: #f59e0b; }
+[data-theme="dark"] .sidebar-page-icon svg{ color: var(--muted); }
+
+/* ---- Icon language: muted at rest, accent on hover, color only for active state ---- */
+.zb-btn{ color: var(--muted); }
+.zb-btn:hover{ color: var(--ink-2); }
+.zb-btn.is-active{ color: var(--accent); }
+.zb-btn.is-active:hover{ color: var(--accent-hover); }
+.tb-icon-btn{ color: var(--muted); }
+.tb-icon-btn:hover:not(:disabled){ color: var(--ink-2); }
+.tb-icon-btn.is-active{ color: var(--accent); }
+.icon-btn.palette.tint{ color: var(--muted); }
+.icon-btn.palette.tint:hover{ color: var(--accent); }
+.icon-btn.palette.tint.is-active{ color: var(--accent); }
+.icon-btn.palette.tint svg{ color: var(--muted); }
+.icon-btn.palette.tint:hover svg{ color: var(--accent); }
+.icon-btn.palette.tint.is-active svg{ color: var(--accent); }
+.node-card.is-tinted .icon-btn.palette.tint svg{ color: var(--tint); }
+.node-card.is-tinted .icon-btn.palette.tint.is-active svg{ color: var(--tint); }

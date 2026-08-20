@@ -3,16 +3,9 @@ import { useRef, useState } from 'react';
 import { useCanvasStore } from '@/lib/store';
 import type { Annotation } from '@/lib/types';
 import { parseImportedCanvas, serializeCanvas } from '@/lib/portability';
-import { visibleOrder } from '@/lib/operations/hierarchy';
-import { exportCanvasPng } from '@/lib/exportPng';
 import DownloadIcon from '@mui/icons-material/Download';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
-import ImageIcon from '@mui/icons-material/Image';
-
-function sanitize(name: string): string {
-  const s = name.trim().replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-  return s || 'canvas';
-}
+import ExportModal from './ExportModal';
 
 export default function DataPortability() {
   const canvas = useCanvasStore(s => s.canvas);
@@ -22,32 +15,7 @@ export default function DataPortability() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorTitle, setErrorTitle] = useState('Import failed');
-
-  const onExportPng = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await exportCanvasPng();
-      setError(null);
-    } catch {
-      setErrorTitle('Export failed');
-      setError('PNG export failed. Please try again.');
-    }
-  };
-
-  const onExport = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!canvas) return;
-    const json = serializeCanvas(canvas);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${sanitize(canvas.name)}.synapse.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const onImportClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -56,7 +24,6 @@ export default function DataPortability() {
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // Reset so same file can be re-selected
     if (fileRef.current) fileRef.current.value = '';
     if (!file) return;
     let text: string;
@@ -79,7 +46,6 @@ export default function DataPortability() {
   const onConfirm = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!pending || !canvas) return;
-    // Backup current canvas if it has >=1 node
     const nodeCount = Object.keys(canvas.nodes).length;
     if (nodeCount >= 1) {
       try {
@@ -88,7 +54,7 @@ export default function DataPortability() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${sanitize(canvas.name)}-backup-${Date.now()}.synapse.json`;
+        a.download = `canvas-backup-${Date.now()}.synapse.json`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -122,31 +88,19 @@ export default function DataPortability() {
       >
         <button
           className="portability-btn"
-          onClick={onExport}
-          title="Export canvas"
-          aria-label="Export canvas"
-        >
-          <FileUploadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
-          Export
-        </button>
-        <button
-          className="portability-btn"
-          onClick={onExportPng}
-          disabled={!canvas || visibleOrder(canvas).length === 0}
-          title="Export PNG (transparent)"
-          aria-label="Export PNG (transparent)"
-        >
-          <ImageIcon sx={{ fontSize: 16 }} aria-hidden="true" />
-          PNG
-        </button>
-        <button
-          className="portability-btn"
           onClick={onImportClick}
-          title="Import canvas"
+          title="Import"
           aria-label="Import canvas"
         >
           <DownloadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
-          Import
+        </button>
+        <button
+          className="portability-btn"
+          onClick={() => setExportModalOpen(true)}
+          title="Export"
+          aria-label="Export canvas"
+        >
+          <FileUploadIcon sx={{ fontSize: 16 }} aria-hidden="true" />
         </button>
         <input
           ref={fileRef}
@@ -226,6 +180,7 @@ export default function DataPortability() {
           </div>
         </div>
       )}
+      <ExportModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} />
     </>
   );
 }

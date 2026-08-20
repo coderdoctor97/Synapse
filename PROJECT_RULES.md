@@ -1,55 +1,40 @@
-# PROJECT_RULES.md — Synapse
-> This file is the single source of truth for how Synapse must be built.
-> Every AI agent working on this codebase MUST read this file before making any change.
-> If a request conflicts with this file, stop and ask — do not improvise.
+# PROJECT_RULES.md — Synapse V1 Constitution
 
----
+## 1. Core Principle
+Local-first. All state lives in `localStorage` (key `synapse:v1:canvas:<id>`). No server, no sync, no auth.
 
-## 1. PROJECT IDENTITY
+## 2. Tech Stack (LOCKED)
+- **Framework:** Next.js 14 (App Router)
+- **State:** Zustand 4.x
+- **Styling:** Tailwind CSS
+- **Icons:** @phosphor-icons/react
+- **No backend.** No API routes. No databases. No auth providers.
 
-- **Name:** Synapse — Contextual Active Recall Canvas
-- **Purpose:** A hierarchical outliner on an infinite canvas for progressive disclosure and active recall. Built for medical students preparing for high-volume exams.
-- **Core loop:** Build a topic tree → Collapse everything → Recall from memory → Expand to verify → Tag weak items → See the heat-map.
-- **Principles:** Local-first. Lightweight. No backend. No accounts. No cloud.
-
----
-
-## 2. TECH STACK (LOCKED)
-
-| Layer | Choice | Status |
-|---|---|---|
-| Framework | Next.js 13+ App Router | LOCKED |
-| Language | TypeScript (strict) | LOCKED |
-| State | Zustand | LOCKED |
-| Persistence | localStorage (V1) | LOCKED |
-| Backend | NONE. No API routes, no database | LOCKED |
-| Node storage | Flat dictionary `Record<string, Node>`, never nested | LOCKED |
-
-Do NOT introduce new frameworks, databases, state libraries, or backend services without explicit approval.
-
----
-
-## 3. DATA MODEL (LOCKED FOR V1)
-
+## 3. Data Model (LOCKED V1)
 ```ts
-type NodeStatus = 'none' | 'failed' | 'review' | 'mastered';
+type Status = 'none' | 'failed' | 'review' | 'mastered';
+type Node = {
+  id: string; content: string; parentId: string | null;
+  position: { x: number; y: number }; status: Status;
+  isCollapsed: boolean; createdAt: number; updatedAt: number;
+};
+type CanvasData = {
+  id: string; name: string;
+  nodes: Record<string, Node>; viewport: { x: number; y: number; zoom: number };
+  createdAt: number; updatedAt: number;
+};
+```
+`Node.content` is plain text only — no markdown fields (`contentRich`/`markdown`/`richText` forbidden).
 
-interface Node {
-  id: string;                    // UUID
-  content: string;               // Plain text only in V1
-  parentId: string | null;       // null = root node
-  position: { x: number; y: number };
-  status: NodeStatus;
-  isCollapsed: boolean;
-  createdAt: number;
-  updatedAt: number;
-}
+## 4. Scope
+Single-page canvas. Tree layout (hierarchical). Node CRUD + status cycle + collapse/expand + selection + drag. Undo/redo for content changes.
 
-interface Canvas {
-  id: string;
-  name: string;
-  nodes: Record<string, Node>;
-  viewport: { x: number; y: number; zoom: number };
-  createdAt: number;
-  updatedAt: number;
-}
+## 5. File Layout
+- `src/app/` — Next.js App Router shell
+- `src/components/Canvas/` — UI components (Canvas, Node, Toolbar, edges)
+- `src/lib/` — pure logic (types, store, persistence, operations/)
+- `src/lib/operations/` — domain logic (hierarchy, status, nodes, layout)
+- `tests/` — unit tests (vitest)
+
+## 6. Editor Contract
+The Node editor is a `<textarea>` with a separate `draft` state. `onBlur` saves to store. The display div renders via `parseFormatting(draft ?? node.content)`. No form libraries. No rich text.

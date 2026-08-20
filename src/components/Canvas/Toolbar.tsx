@@ -5,11 +5,14 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import {MagicWandIcon} from '@phosphor-icons/react';
 
 export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, onExpand }: { onAdd: () => void; onAddText: () => void; onAddHeading: () => void; onCollapse: () => void; onExpand: () => void }) {
   const canvas = useCanvasStore(s => s.canvas);
   const past = useCanvasStore(s => s.past), future = useCanvasStore(s => s.future), undo = useCanvasStore(s => s.undo), redo = useCanvasStore(s => s.redo);
+  const applyTidy = useCanvasStore(s => s.applyTidy);
   const canUndo = past.length > 0, canRedo = future.length > 0;
+  const hasNodes = !!canvas && Object.keys(canvas.nodes).length > 0;
 
   // Derived collapse/expand state (UI-only — store actions untouched)
   const nodes = canvas?.nodes;
@@ -41,6 +44,15 @@ export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, on
         {allCollapsed
           ? <UnfoldMoreIcon sx={{ fontSize: 16 }} aria-hidden="true" />
           : <UnfoldLessIcon sx={{ fontSize: 16 }} aria-hidden="true" />}
+      </Button>
+      <Button
+        className="tb-icon-btn"
+        disabled={!hasNodes}
+        onClick={e => { e.stopPropagation(); applyTidy(); }}
+        title="Tidy layout"
+        aria-label="Tidy layout"
+      >
+        <MagicWandIcon size={16} aria-hidden="true" />
       </Button>
       <div className="tb-sep" />
       <Button disabled={!canUndo} onClick={e => { e.stopPropagation(); undo(); }} aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)" className={`tb-icon-btn${canUndo ? '' : ' is-disabled'}`}>

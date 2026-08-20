@@ -3,6 +3,7 @@
 > **This file is the built-in shield for Synapse. It is auto-loaded into every agent session.**
 > It merges `PROJECT_RULES.md` (single source of truth) + `ARCHITECTURE_v1.md` (build map)
 > into one enforceable contract, backed by `SYNAPSE_GUARDIAN.md` and `scripts/guardian.mjs`.
+> **The authoritative strict rule set is `SYNAPSE_STRICT_RULES.md` — read it before every change.**
 > **Strictly follow this file on every change. If a request conflicts with anything marked LOCKED, STOP and ask — never improvise.**
 
 ---
@@ -10,10 +11,12 @@
 ## 0. MANDATORY PRE-CHANGE RITUAL (every task, every edit)
 
 1. Read this file. If context was truncated, re-read it.
-2. Read `PROJECT_RULES.md` and `ARCHITECTURE_v1.md` — they are the source documents this shield is built from.
-3. **Deny-by-default:** anything marked `LOCKED` cannot be changed without explicit user approval + a migration strategy.
-4. If a user request conflicts with a LOCKED rule → **STOP, explain, and ask for `OVERRIDE: <reason>`** before doing anything.
-5. Keep every change inside the architecture map (§4). No scope creep, no new frameworks, no backend.
+2. Read `SYNAPSE_STRICT_RULES.md` — the single authoritative strict rule set (identity, tech stack, data model, placement map, invariants, validation, commit rule, UI/UX skills).
+3. Read `PROJECT_RULES.md` and `ARCHITECTURE_v1.md` — they are the source documents this shield is built from.
+4. **Deny-by-default:** anything marked `LOCKED` cannot be changed without explicit user approval + a migration strategy.
+5. If a user request conflicts with a LOCKED rule → **STOP, explain, and ask for `OVERRIDE: <reason>`** before doing anything.
+6. Keep every change inside the architecture map (§4). No scope creep, no new frameworks, no backend.
+7. For any UI/UX change, load and follow the relevant skill(s) from `skills/` (see `SYNAPSE_STRICT_RULES.md` §7).
 
 ---
 
@@ -140,7 +143,7 @@ npm run build               # TypeScript + Next production compile
 npm test                    # vitest unit tests
 ```
 
-Also verify the affected interaction manually when relevant (create, edit, status cycle, collapse/expand, drag, zoom/pan, delete, reload-restore).
+Also verify the affected interaction manually when relevant (create, edit, status cycle, collapse/expand, drag, zoom/pan, delete, reload-restore). UI/UX changes MUST follow the `skills/` collection (`better-interface` + applicable domain skills) per `SYNAPSE_STRICT_RULES.md` §7.
 
 ---
 
@@ -171,4 +174,4 @@ Also verify the affected interaction manually when relevant (create, edit, statu
 
 ---
 
-**Shield active. Sources: `PROJECT_RULES.md` (authoritative), `ARCHITECTURE_v1.md`, `SYNAPSE_GUARDIAN.md`, validated by `scripts/guardian.mjs`.**
+**Shield active. Sources: `SYNAPSE_STRICT_RULES.md` (authoritative strict rules), `PROJECT_RULES.md` (authoritative), `ARCHITECTURE_v1.md`, `SYNAPSE_GUARDIAN.md`, validated by `scripts/guardian.mjs`.**

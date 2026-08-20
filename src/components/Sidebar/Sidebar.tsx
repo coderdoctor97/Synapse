@@ -5,6 +5,13 @@ import { useCanvasStore } from '@/lib/store';
 import { getFoldersInFolder, getPagesInFolder } from '@/lib/operations/library';
 import { readCanvasRaw } from '@/lib/persistence';
 import { serializeCanvas } from '@/lib/portability';
+import { FolderIcon, NoteIcon } from '@phosphor-icons/react';
+
+function defaultName(prefix: string): string {
+  const d = new Date();
+  const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `${prefix} · ${label}`;
+}
 
 function sanitize(name: string): string {
   const s = name.trim().replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
@@ -214,7 +221,7 @@ export default function Sidebar() {
           className="sidebar-action-btn"
           onClick={e => {
             e.stopPropagation();
-            addFolder('New folder');
+            addFolder(defaultName('Folder'));
           }}
           onPointerDown={e => e.stopPropagation()}
           title="New folder"
@@ -226,7 +233,7 @@ export default function Sidebar() {
           className="sidebar-action-btn primary"
           onClick={e => {
             e.stopPropagation();
-            const id = addPage('Untitled', null);
+            const id = addPage(defaultName('Quick note'), null);
             if (id) router.push('/canvas/' + id);
           }}
           onPointerDown={e => e.stopPropagation()}
@@ -252,7 +259,7 @@ export default function Sidebar() {
                   {isEditing ? (
                     <div className="sidebar-folder-row is-editing" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
                       <span className={`sidebar-chevron ${isExpanded ? 'open' : ''}`}>›</span>
-                      <span className="sidebar-folder-icon">📁</span>
+                      <span className="sidebar-folder-icon"><FolderIcon size={14} weight="duotone" color="#f59e0b" aria-hidden="true" /></span>
                       <input
                         ref={inputRef}
                         className="sidebar-inline-input"
@@ -305,16 +312,16 @@ export default function Sidebar() {
                         aria-label={`Folder ${folder.name}`}
                       >
                         <span className={`sidebar-chevron ${isExpanded ? 'open' : ''}`}>›</span>
-                        <span className="sidebar-folder-icon">📁</span>
+                        <span className="sidebar-folder-icon"><FolderIcon size={14} weight="duotone" color="#f59e0b" aria-hidden="true" /></span>
                         <span className="sidebar-folder-name">{folder.name}</span>
-                        <span className="sidebar-count">{pages.length}</span>
+                        {pages.length > 0 && <span className="sidebar-count">{pages.length}</span>}
                       </button>
                       <div className="sidebar-folder-actions">
                       <button
                         className="sidebar-icon-btn"
                         onClick={e => {
                           e.stopPropagation();
-                          const pid = addPage('Untitled', folder.id);
+                          const pid = addPage(defaultName('Quick note'), folder.id);
                           if (pid) {
                             setExpanded(prev => {
                               const next = new Set(prev);
@@ -378,7 +385,7 @@ export default function Sidebar() {
                           if (isPageEditing) {
                             return (
                               <div key={page.id} className="sidebar-page is-editing" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
-                                <span className="sidebar-page-icon">📄</span>
+                                <span className="sidebar-page-icon"><NoteIcon size={13} weight="duotone" aria-hidden="true" /></span>
                                 <input
                                   ref={inputRef}
                                   className="sidebar-inline-input"
@@ -426,7 +433,7 @@ export default function Sidebar() {
                                 onPointerDown={e => e.stopPropagation()}
                                 title={page.name}
                               >
-                                <span className="sidebar-page-icon">📄</span>
+                                <span className="sidebar-page-icon"><NoteIcon size={13} weight="duotone" aria-hidden="true" /></span>
                                 <span className="sidebar-page-name">{page.name}</span>
                               </button>
                               <button
@@ -512,7 +519,7 @@ export default function Sidebar() {
                 if (isPageEditing) {
                   return (
                     <div key={page.id} className="sidebar-page is-editing" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
-                      <span className="sidebar-page-icon">📄</span>
+                      <span className="sidebar-page-icon"><NoteIcon size={13} weight="duotone" aria-hidden="true" /></span>
                       <input
                         ref={inputRef}
                         className="sidebar-inline-input"
@@ -560,7 +567,7 @@ export default function Sidebar() {
                       onPointerDown={e => e.stopPropagation()}
                       title={page.name}
                     >
-                      <span className="sidebar-page-icon">📄</span>
+                      <span className="sidebar-page-icon"><NoteIcon size={13} weight="duotone" aria-hidden="true" /></span>
                       <span className="sidebar-page-name">{page.name}</span>
                     </button>
                     <button
