@@ -1,64 +1,325 @@
-# 🛡️ AGENTS.md — Synapse Built-in Shield
+# 🛡️ AGENTS.md — Synapse Agent Operating Contract
 
-> **This file is the built-in shield for Synapse. It is auto-loaded into every agent session.**
-> It merges `PROJECT_RULES.md` (single source of truth) + `ARCHITECTURE_v1.md` (build map)
-> into one enforceable contract, backed by `SYNAPSE_GUARDIAN.md` and `scripts/guardian.mjs`.
-> **The authoritative strict rule set is `SYNAPSE_STRICT_RULES.md` — read it before every change.**
-> **Strictly follow this file on every change. If a request conflicts with anything marked LOCKED, STOP and ask — never improvise.**
-
----
-
-## 0. MANDATORY PRE-CHANGE RITUAL (every task, every edit)
-
-1. Read this file. If context was truncated, re-read it.
-2. Read `SYNAPSE_STRICT_RULES.md` — the single authoritative strict rule set (identity, tech stack, data model, placement map, invariants, validation, commit rule, UI/UX skills).
-3. Read `PROJECT_RULES.md` and `ARCHITECTURE_v1.md` — they are the source documents this shield is built from.
-4. **Deny-by-default:** anything marked `LOCKED` cannot be changed without explicit user approval + a migration strategy.
-5. If a user request conflicts with a LOCKED rule → **STOP, explain, and ask for `OVERRIDE: <reason>`** before doing anything.
-6. Keep every change inside the architecture map (§4). No scope creep, no new frameworks, no backend.
-7. For any UI/UX change, load and follow the relevant skill(s) from `skills/` (see `SYNAPSE_STRICT_RULES.md` §7).
+> **This file is the built-in operating contract for Synapse. It is intended to be auto-loaded into every coding-agent session.**
+>
+> This document governs **how an agent reasons, plans, changes, validates, and reports work** in the Synapse repository.
+>
+> The authoritative project sources remain:
+> 1. `SYNAPSE_STRICT_RULES.md` — authoritative strict rule set
+> 2. `PROJECT_RULES.md` — project rules / source of truth
+> 3. `ARCHITECTURE_v1.md` — architecture/build map
+> 4. `SYNAPSE_GUARDIAN.md` + `scripts/guardian.mjs` — enforcement/validation
+>
+> **Rule priority:** LOCKED/authoritative repository rules always override agent assumptions, README descriptions, generic best practices, or user requests that do not explicitly authorize an override.
 
 ---
 
-## 1. PROJECT IDENTITY — LOCKED
+## 0. CORE AGENT PRINCIPLE — DO NOT IMPROVISE
+
+The agent must optimize for **correctness, architectural consistency, minimal change surface, and verifiable behavior** — not for speed or the amount of code produced.
+
+### Non-negotiable behavior
+
+- Never invent a file, component, hook, API, state field, dependency, data shape, route, design pattern, or architectural relationship without verifying it in the repository.
+- Never assume that a familiar framework pattern exists in this project just because it is common elsewhere.
+- Never “clean up” unrelated code while implementing a feature.
+- Never refactor unrelated code unless the requested feature genuinely requires it.
+- Never silently reinterpret a requirement.
+- Never silently work around a `LOCKED` rule.
+- Never make a destructive architectural decision merely because it appears simpler.
+- When uncertain about repository-specific behavior, inspect the repository and authoritative docs before acting.
+- When a material ambiguity remains after inspection, ask the user rather than guessing.
+
+**The goal is not merely to make the requested change work. The goal is to make it work without violating the existing system.**
+
+---
+
+# 1. MANDATORY SESSION INITIALIZATION
+
+Before making any code change in a new task/session:
+
+1. Read `AGENTS.md` fully. If context was truncated, re-read it.
+2. Read `SYNAPSE_STRICT_RULES.md`.
+3. Read `PROJECT_RULES.md`.
+4. Read `ARCHITECTURE_v1.md`.
+5. Inspect the relevant repository structure and existing implementation.
+6. Load the applicable UI/UX skill(s) from `skills/` before making UI/UX changes.
+7. Determine whether the requested change conflicts with any `LOCKED` rule.
+8. Do **not** edit code yet.
+
+### Source-of-truth rule
+
+Treat documentation as follows:
+
+| Source | Role |
+|---|---|
+| `SYNAPSE_STRICT_RULES.md` | Highest-authority strict constraints |
+| `PROJECT_RULES.md` | Project rules and invariants |
+| `ARCHITECTURE_v1.md` | Placement/build map |
+| `AGENTS.md` | Agent workflow + enforcement behavior |
+| Existing source code | Current implementation reality |
+| `README.md` | Product/project documentation; do not use it to override repository reality |
+| Generic framework knowledge | Lowest priority; use only where repository evidence is absent |
+
+If documentation and source code appear inconsistent, **do not silently choose one**. Investigate the inconsistency and report it before making a risky assumption.
+
+---
+
+# 2. REQUEST INTAKE — FEATURE FIRST, CODE LATER
+
+When the user requests a new feature, behavior change, redesign, refactor, bug fix, or integration:
+
+### Phase A — Understand the request
+
+First, restate the requested change in your own words in 1–5 concise bullets.
+
+The restatement must identify:
+
+- **Goal:** What outcome does the user want?
+- **User-facing behavior:** What should the user be able to do or observe?
+- **Scope:** What part of the product is affected?
+- **Constraints already known:** What must remain unchanged?
+- **Unknowns:** What cannot yet be determined safely?
+
+Do not present the restatement as a final implementation plan.
+
+### Phase B — Inspect before questioning
+
+Before asking questions, inspect the repository enough to answer questions from existing evidence yourself.
+
+Check, where relevant:
+
+- current folder/file structure
+- existing components
+- reusable UI primitives
+- hooks
+- Zustand store/state
+- domain operations
+- persistence layer
+- data types
+- routes/pages
+- tests
+- existing styles/theme system
+- existing similar features
+- relevant skills
+- guardian/rule enforcement
+
+**Do not ask the user questions whose answers are already discoverable in the repository.**
+
+### Phase C — Clarification gate
+
+Only after repository inspection, ask the **minimum necessary set of targeted questions**.
+
+Questions should be concrete and decision-oriented, for example:
+
+1. Which existing behavior should this new behavior replace or extend?
+2. Which existing component should remain the primary entry point?
+3. Should this affect persisted data or remain UI-only?
+4. What should happen in the edge case X?
+5. Which of these two behaviors matches your intended UX?
+
+Avoid vague questions such as “What do you want?” when the repository already gives useful context.
+
+### IMPORTANT: DO NOT IMPLEMENT BEFORE THE GATE IS CLOSED
+
+If a material requirement is unresolved, **stop before editing code**.
+
+You may inspect, reason, map dependencies, and propose alternatives, but do not implement the ambiguous portion until the user answers.
+
+---
+
+# 3. ARCHITECTURE IMPACT ANALYSIS
+
+After the request is sufficiently specified, identify the smallest architecture surface that must change.
+
+Create a concise impact map:
+
+| Area | Existing location | Expected action | Reason |
+|---|---|---|---|
+| UI | `...` | Reuse / edit / create | `...` |
+| State | `...` | Reuse / edit / none | `...` |
+| Domain logic | `...` | Reuse / edit / create | `...` |
+| Persistence | `...` | Reuse / migration / none | `...` |
+| Tests | `...` | Add / update / none | `...` |
+
+The agent must explicitly classify each candidate file as:
+
+- **MUST CHANGE** — required for the feature
+- **MAY CHANGE** — potentially useful but not yet necessary
+- **DO NOT CHANGE** — unrelated, locked, or unnecessary
+
+### Minimal-change rule
+
+Prefer this order:
+
+1. Reuse existing component.
+2. Reuse existing hook/util/operation.
+3. Extend the closest existing implementation.
+4. Add a new focused module only when reuse/extension is inappropriate.
+5. Refactor existing architecture only when the feature cannot be implemented safely without it.
+
+Do not create duplicate components, duplicate state, or duplicate business logic merely because a new feature is easier to implement that way.
+
+---
+
+# 4. DEPENDENCY + DATA SAFETY CHECK
+
+Before implementation, explicitly determine whether the feature changes any of the following:
+
+- persisted data
+- TypeScript interfaces/types
+- Zustand state
+- state ownership
+- localStorage schema
+- node hierarchy behavior
+- status behavior
+- coordinate/layout rules
+- routing
+- package dependencies
+- external services
+- security/privacy boundaries
+
+If persisted data or a `LOCKED` shape changes, follow the migration rules from `SYNAPSE_STRICT_RULES.md` and `PROJECT_RULES.md`.
+
+**Never silently discard or reinterpret existing user data.**
+
+---
+
+# 5. PLAN GATE — EXPLAIN BEFORE EXECUTION
+
+Before editing, provide an implementation plan.
+
+The plan must include:
+
+### A. Goal
+One clear sentence describing the requested outcome.
+
+### B. Files to change
+List exact file paths and why each is needed.
+
+### C. Files to preserve
+List important existing components/modules that will be reused and preserved.
+
+### D. Implementation sequence
+Use a logical order such as:
+
+1. Types/state if required
+2. Pure/domain logic if required
+3. Reusable component changes
+4. Feature UI integration
+5. Persistence/migration if required
+6. Tests
+7. Validation
+
+### E. Risks / invariants
+Identify which existing invariants could be affected and how they will be protected.
+
+### F. Non-goals
+Explicitly state what the agent will **not** change.
+
+### Approval rule
+
+For **non-trivial features**, stop after presenting the plan and wait for the user's approval before implementation.
+
+For **tiny, unambiguous changes** that are clearly local and carry no architectural/data risk, implementation may proceed without a separate approval step, but the agent must still internally perform the same safety checks.
+
+---
+
+# 6. IMPLEMENTATION RULES
+
+Once implementation is authorized:
+
+### 6.1 Preserve existing architecture
+
+- Follow the placement map in `ARCHITECTURE_v1.md`.
+- Keep routing in `src/app/`.
+- Keep UI in the established component structure.
+- Keep reusable UI primitives reusable.
+- Keep domain/business rules in the established domain layer.
+- Keep persistence isolated to the existing persistence boundary.
+- Keep state ownership consistent with the existing store architecture.
+
+### 6.2 Prefer reuse
+
+Before creating a new component/function/hook:
+
+- search for an existing equivalent
+- inspect how nearby features solve the same problem
+- extend the closest existing abstraction when appropriate
+
+### 6.3 Styling consistency
+
+Use the **actual styling system present in the repository** and existing design patterns.
+
+Do not introduce Tailwind, Emotion, CSS Modules, styled-components, inline styling systems, or another styling approach merely because it is familiar or convenient.
+
+When a styling system is locked by the authoritative project rules, follow that exact rule.
+
+### 6.4 UI/UX changes
+
+For UI/UX work:
+
+1. Load the relevant skill(s) from `skills/`.
+2. Inspect existing UI patterns.
+3. Reuse existing components and tokens wherever possible.
+4. Preserve interaction conventions already established by the project.
+5. Avoid introducing a visually inconsistent one-off component.
+
+### 6.5 No speculative improvements
+
+Do not add:
+
+- unrelated refactors
+- “future-proof” abstractions without a concrete need
+- new dependencies without necessity
+- new architecture layers without necessity
+- extra features not requested
+- unrelated formatting churn
+- unrelated renaming
+
+---
+
+# 7. LOCKED PROJECT RULES
+
+The following project constraints currently remain LOCKED unless the authoritative strict rules explicitly change them.
+
+## Identity
 
 - **Name:** Synapse — Contextual Active Recall Canvas
-- **Purpose:** Hierarchical outliner on an infinite canvas for progressive disclosure + active recall. Built for medical students.
-- **Core loop (never break):** Build topic tree → Collapse All → Recall from memory → Expand to verify → Tag weak items → See the heat-map.
-- **Principles:** Local-first. Lightweight. No backend. No accounts. No cloud.
+- **Purpose:** Hierarchical outliner on an infinite canvas for progressive disclosure + active recall.
+- **Core loop:** Build topic tree → Collapse All → Recall from memory → Expand to verify → Tag weak items → See the heat-map.
+- **V1 philosophy:** local-first, lightweight, no backend, no accounts, no cloud.
 
-**Shield rule:** Any feature adding auth, cloud sync, or a server dependency is REJECTED unless the user explicitly says `OVERRIDE: cloud-approved`.
+## Tech stack
 
----
+- Next.js 13+ / 14.x as defined by `package.json` and authoritative rules
+- App Router via `src/app/`
+- TypeScript strict mode
+- Zustand for canonical state
+- localStorage for V1 persistence through `src/lib/persistence.ts`
+- No backend/API routes in V1
+- Flat `Record<string, Node>` storage model
 
-## 2. TECH STACK — LOCKED (no exceptions)
+## Banned dependency rule
 
-| Layer | Choice | Enforcement |
-|---|---|---|
-| Framework | Next.js 13+ App Router | Keep `next` 14.x in `package.json`; routing only via `src/app/` |
-| Language | TypeScript (strict) | All code `.ts`/`.tsx`; `tsconfig.json` `strict: true` stays |
-| State | Zustand 4.5.5 | No Redux, Jotai, MobX, Recoil, Valtio, or replacement |
-| Persistence | localStorage (V1) | Only `src/lib/persistence.ts`; key `synapse:v1:canvas:<id>` |
-| Backend | **NONE** | `src/app/api/` must NOT exist. No express/prisma/mongoose/drizzle/supabase/firebase |
-| Node storage | Flat `Record<string, Node>` | Never nested trees, never array-of-children |
+Do not install or introduce backend/database/auth/state-management replacement dependencies that are explicitly banned by `SYNAPSE_STRICT_RULES.md`.
 
-**Banned dependencies (never `npm install` these):**
-`express, fastify, koa, @prisma/client, prisma, mongoose, mongodb, pg, mysql2, drizzle-orm, supabase, firebase, @supabase/supabase-js, next-auth, lucia, redux, @reduxjs/toolkit, jotai, valtio, mobx, recoil`
-
-If the user asks for one: explain the LOCKED rule and propose a local-first alternative instead of installing it.
+If the user requests a banned dependency, explain the conflict and request the repository's explicit override mechanism rather than silently installing it.
 
 ---
 
-## 3. DATA MODEL — LOCKED FOR V1 (changes require migration)
+# 8. V1 DATA MODEL — PROTECT PERSISTED DATA
+
+The current locked model is:
 
 ```ts
 type Status = 'none' | 'failed' | 'review' | 'mastered';
 
 interface Node {
-  id: string;                  // UUID
-  content: string;             // Plain text ONLY in V1 — no markdown/rich text
-  parentId: string | null;     // null = root node
-  position: { x: number; y: number };   // world space
+  id: string;
+  content: string;
+  parentId: string | null;
+  position: { x: number; y: number };
   status: Status;
   isCollapsed: boolean;
   createdAt: number;
@@ -75,103 +336,233 @@ interface CanvasData {
 }
 ```
 
-**Shield rules:**
-1. Adding/removing/renaming any `Node` field requires: schemaVersion bump → migration in `persistence.ts` `loadCanvas()` → ARCHITECTURE_v1.md §10 update. **Never silently discard old user data.**
-2. `content` stays plain text until V2 explicitly approves markdown.
-3. `nodes` stays a flat dictionary; hierarchy is derived via `parentId`.
-4. Existing extensions already in the codebase (`tint`, themes, `CanvasIndex`/`Folder`/`PageMeta`, `PortableCanvas`) are allowed — but each new shape change still needs the migration rule.
+Any addition/removal/rename of persisted fields requires the migration process defined by the authoritative rules.
+
+Never silently discard old user data.
 
 ---
 
-## 4. ARCHITECTURE MAP — where to make changes
+# 9. DOMAIN INVARIANTS — NEVER BREAK SILENTLY
 
-```
-synapse/
-├── src/app/                          # Routing + shell ONLY (no API routes)
-│   ├── layout.tsx                    # Root HTML shell, global CSS
-│   ├── page.tsx                      # → redirect /canvas/default
-│   └── canvas/[id]/page.tsx          # Dynamic canvas route
-├── src/components/Canvas/            # Canvas interactions (Canvas, Node, Toolbar, panels)
-├── src/components/Sidebar/           # Sidebar navigation
-├── src/components/ui/                # Reusable primitives (Button, StatusBadge)
-├── src/lib/                          # Framework-independent domain layer
-│   ├── types.ts                      # Data shapes + constants
-│   ├── store.ts                      # Zustand store + commands + seed
-│   ├── persistence.ts                # localStorage boundary + migrations
-│   ├── portability.ts                # Import/export boundary
-│   ├── theme.ts                      # Theme system
-│   └── operations/                   # Pure business logic (nodes, hierarchy, status, library)
-├── src/hooks/                        # Reusable UI hooks
-└── tests/                            # Vitest unit tests
-```
+Protect these established behaviors:
 
-| Change requested | Primary location |
-|---|---|
-| Route/page | `src/app/` (App Router, no api routes) |
-| Visual styles | `src/app/globals.css` |
-| Canvas interaction | `src/components/Canvas/` + `src/hooks/` |
-| Business rule | `src/lib/operations/` (pure logic, tests first) |
-| Node/canvas shape | `src/lib/types.ts` → then persistence migration |
-| Storage | `src/lib/persistence.ts` |
-| Reusable control | `src/components/ui/` |
-| Regression test | `tests/` |
+1. `parentId: null` means root.
+2. Hierarchy is derived from the flat node record.
+3. Collapsed ancestors hide their descendants.
+4. Delete cascades to descendants exactly once.
+5. Status cycle remains `none → failed → review → mastered → none`.
+6. Heat-map aggregation follows the established direct-child rule.
+7. World-space coordinates and viewport transforms remain consistent.
+8. Canonical state remains in the established Zustand store.
+9. Persistence remains inside `persistence.ts`.
+10. Editing behavior remains consistent with the established save/cancel interaction.
 
-**Shield rule:** Keep domain logic out of components. Tree calculations → `src/lib/operations/`; storage → `src/lib/`; UI → `src/components/`; routing → `src/app/`.
+If a requested feature would change one of these, stop and treat it as an architectural/data-model change rather than silently modifying the invariant.
 
 ---
 
-## 5. DOMAIN INVARIANTS — never break
+# 10. VALIDATION — PROVE THE CHANGE
 
-1. **Hierarchy:** `parentId: null` = root. Children derived by filtering the flat record.
-2. **Visibility:** Only nodes whose ancestors are ALL expanded render — `visibleOrder()` is the source of truth. A collapsed ancestor hides the whole subtree.
-3. **Delete:** Cascading — delete the node + all descendants, each exactly once.
-4. **Status cycle:** `none → failed → review → mastered → none` (`STATUS_ORDER`).
-5. **Heat-map:** `statusSummary()` aggregates **direct children only**, never grandchildren.
-6. **Coordinates:** World space. Viewport applies `translate(x, y) scale(zoom)`. Children at `x = parent.x + 320`; siblings stacked with `VERTICAL_GAP` + node height.
-7. **State ownership:** canonical state in `useCanvasStore` (Zustand); ephemeral gesture state in `Canvas.tsx`; draft text in `Node.tsx`; persistence in `persistence.ts` (debounced ~400 ms).
-8. **Editing:** Save on blur or Enter; Escape cancels. `editingId`/`justCreatedId` in store.
-
----
-
-## 6. MANDATORY VALIDATION — before you finish ANY task
-
-Run all three. If any fails, fix it before reporting done:
+Before reporting a task as complete, run the required repository validation:
 
 ```bash
-node scripts/guardian.mjs   # shield validator — locked-rule compliance
-npm run build               # TypeScript + Next production compile
-npm test                    # vitest unit tests
+node scripts/guardian.mjs
+npm run build
+npm test
 ```
 
-Also verify the affected interaction manually when relevant (create, edit, status cycle, collapse/expand, drag, zoom/pan, delete, reload-restore). UI/UX changes MUST follow the `skills/` collection (`better-interface` + applicable domain skills) per `SYNAPSE_STRICT_RULES.md` §7.
+Also manually verify the affected interaction when relevant.
+
+Examples include:
+
+- create
+- edit
+- status cycle
+- collapse/expand
+- drag/pan/zoom where applicable
+- delete
+- reload/restore
+- keyboard interaction
+- affected UI states
+
+### Failure rule
+
+If validation fails:
+
+1. Do not claim completion.
+2. Identify the failing check.
+3. Diagnose whether the failure is caused by the change.
+4. Fix the issue if the fix is within scope.
+5. Re-run validation.
+
+Do not hide or ignore failures.
 
 ---
 
-## 7. COMMITS — EXCLUDED FROM THIS SHIELD (user handles manually)
+# 11. CONFLICT / OVERRIDE PROTOCOL
 
-> The user commits manually. This shield does **NOT** enforce anything commit-related.
+If any requested action conflicts with a `LOCKED` rule:
 
-- **Never** run `git commit`, `git push`, `git rebase`, or open PRs on the user's behalf.
-- **Never** suggest or enforce conventional-commit prefixes, branch naming (`feat/*`, `fix/*`), or PR checklists.
-- Do not stage or stage-touch files; leave the working tree for the user to review and commit.
-- The user may still *ask* you to commit on a case-by-case basis — follow that explicit instruction only then.
+1. **STOP.**
+2. State the exact conflict.
+3. Identify the authoritative rule/source.
+4. Explain the practical impact.
+5. Ask for the project's explicit override syntax.
+6. Do not implement the conflicting change until the override is explicitly granted.
 
----
+Example:
 
-## 8. TESTING — REQUIRED
+> The requested change introduces a backend dependency, but the current V1 rules define Backend = NONE. I have not changed the architecture. Provide the repository-approved override if you want this constraint changed.
 
-- **Unit tests (highest priority):** pure logic under `tests/` — hierarchy (collapse hides descendants, delete hits each descendant once, deterministic `createdAt` ordering), status (direct children only), persistence (corrupt data → fresh canvas, never crash), library.
-- **Component tests (next):** React Testing Library + JSDOM — inline edit, status cycling, toolbar.
-- **E2E (release confidence):** Playwright — create root → enter text → add child → change status → collapse/expand → reload → restored from localStorage.
-
----
-
-## 9. CONFLICT RESOLUTION
-
-- Any conflict with a LOCKED rule → **STOP, explain, ask for `OVERRIDE: <reason>`**.
-- Example: "You asked for Firebase, but PROJECT_RULES.md §2 says Backend NONE. Do you want `OVERRIDE: backend-approved`, or should I build a localStorage adapter instead?"
-- Log approved overrides in `SYNAPSE_GUARDIAN.md` / `.synapse-guardian.json`.
+Never manufacture an override token or invent a migration strategy without evidence.
 
 ---
 
-**Shield active. Sources: `SYNAPSE_STRICT_RULES.md` (authoritative strict rules), `PROJECT_RULES.md` (authoritative), `ARCHITECTURE_v1.md`, `SYNAPSE_GUARDIAN.md`, validated by `scripts/guardian.mjs`.**
+# 12. GIT / COMMIT POLICY — USER OWNS VERSION CONTROL
+
+The agent must **not** manage commits by default.
+
+- Never run `git commit` automatically.
+- Never run `git push` automatically.
+- Never run `git rebase` automatically.
+- Never open or merge a PR automatically.
+- Never stage files automatically as part of normal implementation.
+- Never assume that a change is safe to commit merely because tests pass.
+
+The user reviews changes and handles commits manually.
+
+If the user explicitly instructs the agent to perform a Git action in that specific task, follow that explicit instruction only.
+
+---
+
+# 13. STOP CONDITIONS
+
+The agent must stop implementation and ask the user when:
+
+- a material requirement is ambiguous
+- the repository contains conflicting authoritative rules
+- a requested change requires changing a LOCKED invariant
+- a persisted schema change is required but migration behavior is undefined
+- a referenced file/component cannot be found
+- the proposed implementation requires a dependency that conflicts with project rules
+- the agent cannot verify an assumption that is important to correctness
+- a requested behavior contradicts the current architecture and no approved migration/override exists
+
+**Stopping is preferable to hallucinating.**
+
+---
+
+# 14. FEATURE REQUEST TEMPLATE — RECOMMENDED USER INPUT
+
+Users can provide feature requests in this format:
+
+```text
+FEATURE:
+[What I want to implement]
+
+GOAL:
+[Why I want it / desired outcome]
+
+USER EXPERIENCE:
+[What the user should be able to do or see]
+
+KNOWN CONSTRAINTS:
+[Things that must remain unchanged]
+
+REFERENCES:
+[Existing screen/component/file/feature to follow, if any]
+
+DO NOT CHANGE:
+[Anything explicitly protected]
+
+SUCCESS CRITERIA:
+[How we will know the feature is correct]
+```
+
+The agent should still inspect the repository rather than trusting this template blindly.
+
+---
+
+# 15. REQUIRED AGENT RESPONSE FLOW FOR NEW FEATURES
+
+For a normal non-trivial feature request, the preferred interaction is:
+
+### Step 1 — Understand
+> “I understand the feature as…”
+
+### Step 2 — Inspect
+> “I found these existing components/files/patterns…”
+
+### Step 3 — Clarify
+> “Before implementation, I need these decisions…”
+
+### Step 4 — Architecture map
+> “These are the files that should change; these should remain untouched…”
+
+### Step 5 — Plan
+> “Here is the implementation plan…”
+
+### Step 6 — Approval gate
+> Wait for user approval for non-trivial work.
+
+### Step 7 — Implement
+> Make the smallest safe change.
+
+### Step 8 — Validate
+> Run guardian, build, tests, and relevant manual verification.
+
+### Step 9 — Report
+> State exactly what changed, what was preserved, what was tested, and any remaining limitations.
+
+This sequence is intentionally designed to reduce hallucination, accidental scope expansion, duplicate abstractions, and unrelated regressions.
+
+---
+
+# 16. CHANGE REPORT FORMAT
+
+After implementation, report:
+
+### Changed
+- Exact files changed
+- What each change does
+
+### Preserved
+- Existing components/logic reused
+- Important architecture/invariants preserved
+
+### Validation
+- `node scripts/guardian.mjs` → pass/fail
+- `npm run build` → pass/fail
+- `npm test` → pass/fail
+- Relevant manual checks → pass/fail/not applicable
+
+### Notes
+- Any limitation
+- Any follow-up that is genuinely required
+
+Do not claim a check passed unless it was actually run.
+
+---
+
+# 17. FINAL SHIELD RULE
+
+**READ → INSPECT → CLARIFY → MAP → PLAN → APPROVE → IMPLEMENT → VALIDATE → REPORT.**
+
+Never invert this order for a non-trivial task.
+
+When uncertain, prefer **inspection over assumption**, **reuse over duplication**, **minimal change over refactor**, and **asking over hallucinating**.
+
+---
+
+## 🔒 ACTIVE SOURCES
+
+This contract is enforced alongside:
+
+- `SYNAPSE_STRICT_RULES.md`
+- `PROJECT_RULES.md`
+- `ARCHITECTURE_v1.md`
+- `SYNAPSE_GUARDIAN.md`
+- `scripts/guardian.mjs`
+- applicable files under `skills/`
+
+**If any lower-priority document conflicts with an authoritative/LOCKED rule, the authoritative/LOCKED rule wins.**
